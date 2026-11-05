@@ -57,10 +57,28 @@ export function clearFacts(userId) {
 }
 
 /**
- * Ambil ringkasan riwayat percakapan lama untuk chat.
+ * Ambil ringkasan riwayat percakapan lama untuk chat (opsional per persona).
  */
-export function getSummary(chatId) {
+export function getSummary(chatId, personaId = null) {
   const db = getDb();
+  if (personaId) {
+    try {
+      const pRow = db
+        .prepare(`SELECT text FROM persona_summaries WHERE chat_id = ? AND persona_id = ?`)
+        .get(chatId, personaId);
+      if (pRow?.text) return pRow.text;
+    } catch {}
+
+    // Fallback untuk persona default legacy
+    if (personaId !== 'jiang_cheng') {
+      const row = db
+        .prepare(`SELECT text FROM summaries WHERE chat_id = ?`)
+        .get(chatId);
+      return row?.text ?? null;
+    }
+    return null;
+  }
+
   const row = db
     .prepare(`SELECT text FROM summaries WHERE chat_id = ?`)
     .get(chatId);
@@ -68,27 +86,55 @@ export function getSummary(chatId) {
 }
 
 /**
- * Simpan atau perbarui ringkasan riwayat percakapan untuk chat.
+ * Simpan atau perbarui ringkasan riwayat percakapan untuk chat (opsional per persona).
  */
-export function saveSummary(chatId, text) {
+export function saveSummary(chatId, text, personaId = null) {
   if (!text || typeof text !== 'string') return;
   const clean = text.trim();
   const db = getDb();
-  db.prepare(
-    `INSERT INTO summaries (chat_id, text, updated_at)
-     VALUES (?, ?, ?)
-     ON CONFLICT(chat_id) DO UPDATE SET
-       text = excluded.text,
-       updated_at = excluded.updated_at`,
-  ).run(chatId, clean, Date.now());
+
+  if (personaId) {
+    try {
+      db.prepare(
+        `INSERT INTO persona_summaries (chat_id, persona_id, text, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(chat_id, persona_id) DO UPDATE SET
+           text = excluded.text,
+           updated_at = excluded.updated_at`,
+      ).run(chatId, personaId, clean, Date.now());
+    } catch {}
+  }
+
+  // Jika bukan persona exclusive, sinkronkan juga ke tabel summaries
+  if (!personaId || personaId !== 'jiang_cheng') {
+    db.prepare(
+      `INSERT INTO summaries (chat_id, text, updated_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(chat_id) DO UPDATE SET
+         text = excluded.text,
+         updated_at = excluded.updated_at`,
+    ).run(chatId, clean, Date.now());
+  }
 }
 
 /**
- * Hapus ringkasan riwayat percakapan untuk chat.
+ * Hapus ringkasan riwayat percakapan untuk chat (opsional per persona).
  */
-export function clearSummary(chatId) {
+export function clearSummary(chatId, personaId = null) {
   const db = getDb();
-  db.prepare(`DELETE FROM summaries WHERE chat_id = ?`).run(chatId);
+  if (personaId) {
+    try {
+      db.prepare(`DELETE FROM persona_summaries WHERE chat_id = ? AND persona_id = ?`).run(chatId, personaId);
+    } catch {}
+    if (personaId !== 'jiang_cheng') {
+      db.prepare(`DELETE FROM summaries WHERE chat_id = ?`).run(chatId);
+    }
+  } else {
+    try {
+      db.prepare(`DELETE FROM persona_summaries WHERE chat_id = ?`).run(chatId);
+    } catch {}
+    db.prepare(`DELETE FROM summaries WHERE chat_id = ?`).run(chatId);
+  }
 }
 
 /**
@@ -187,26 +233,47 @@ export async function summarizeOlderHistory({
   generateReplyFn,
   threshold = 24,
   batchSize = 12,
+  personaId = null,
 }) {
   if (typeof generateReplyFn !== 'function') return null;
 
   const db = getDb();
-  const countRow = db
-    .prepare(`SELECT count(*) as count FROM messages WHERE chat_id = ?`)
-    .get(chatId);
-  const total = countRow?.count ?? 0;
+  let count = 0;
+  if (personaId) {
+    const countRow = db
+      .prepare(`SELECT count(*) as count FROM messages WHERE chat_id = ? AND persona_id = ?`)
+      .get(chatId, personaId);
+    count = countRow?.count ?? 0;
+  } else {
+    const countRow = db
+      .prepare(`SELECT count(*) as count FROM messages WHERE chat_id = ?`)
+      .get(chatId);
+    count = countRow?.count ?? 0;
+  }
 
-  if (total <= threshold) return null;
+  if (count <= threshold) return null;
 
   // Ambil pesan paling lama sebanyak batchSize
-  const oldRows = db
-    .prepare(
-      `SELECT id, role, text FROM messages
-       WHERE chat_id = ?
-       ORDER BY id ASC
-       LIMIT ?`,
-    )
-    .all(chatId, batchSize);
+  let oldRows;
+  if (personaId) {
+    oldRows = db
+      .prepare(
+        `SELECT id, role, text FROM messages
+         WHERE chat_id = ? AND persona_id = ?
+         ORDER BY id ASC
+         LIMIT ?`,
+      )
+      .all(chatId, personaId, batchSize);
+  } else {
+    oldRows = db
+      .prepare(
+        `SELECT id, role, text FROM messages
+         WHERE chat_id = ?
+         ORDER BY id ASC
+         LIMIT ?`,
+      )
+      .all(chatId, batchSize);
+  }
 
   if (oldRows.length === 0) return null;
 
@@ -214,7 +281,7 @@ export async function summarizeOlderHistory({
     .map((r) => `${r.role === 'user' ? 'User' : 'Bot'}: ${r.text}`)
     .join('\n');
 
-  const existingSummary = getSummary(chatId);
+  const existingSummary = getSummary(chatId, personaId);
   let prompt = `Rangkum intisari percakapan lama berikut secara padat, jelas, dan objektif dalam 1-2 paragraf pendek. Sertakan topik utama dan keputusan penting yang pernah dibicarakan.`;
   if (existingSummary) {
     prompt += `\n\nRingkasan percakapan sebelumnya:\n${existingSummary}`;
@@ -228,7 +295,7 @@ export async function summarizeOlderHistory({
     });
 
     if (newSummary && newSummary.trim().length > 10) {
-      saveSummary(chatId, newSummary.trim());
+      saveSummary(chatId, newSummary.trim(), personaId);
 
       // Hapus pesan lama yang sudah terangkum agar tabel tetap ramping
       const idsToDelete = oldRows.map((r) => r.id);

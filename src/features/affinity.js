@@ -24,6 +24,7 @@ export function renderStatusCard(aff, persona) {
   const p = persona ?? { strings: {} };
   const info = getLevelInfo(aff.level);
   const bar = buildProgressBar(aff.points, info.minPoints, aff.nextThreshold);
+  const title = p.affinityTitles?.[aff.level] ?? aff.title ?? info.title;
 
   const statusQuotes = p.strings?.affinityStatus ?? [
     'Kita masih orang asing.',
@@ -38,7 +39,7 @@ export function renderStatusCard(aff, persona) {
   const lines = [
     `*Status Hubungan & Kedekatan:*`,
     '',
-    `• Level: *${aff.level}* — *"${aff.title}"*`,
+    `• Level: *${aff.level}* — *"${title}"*`,
     `• Total Poin: *${aff.points}* poin`,
     `• Progres Level: ${bar}`,
     `• Poin Hari Ini: *${aff.gainedToday}/${aff.dailyCap}* poin`,
@@ -58,8 +59,8 @@ export default {
       description: 'Lihat level kedekatan (affinity) dan progres hubunganmu dengan bot',
       handler: async (ctx) => {
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
-        const aff = getAffinity(ctx.from.id, tz);
         const persona = getPersona(ctx);
+        const aff = getAffinity(ctx.from.id, tz, Date.now(), persona?.id);
 
         const cardText = renderStatusCard(aff, persona);
         await ctx.reply(cardText, { parse_mode: 'Markdown' });

@@ -114,7 +114,16 @@ Ganti kepribadian aktif menggunakan perintah `/persona <nama>` atau buka menu in
    - Kaomoji khas: `(-_-)`, `(=_=)`.
    - Suara TTS default: `male-calm`.
 
-5. **Persona Kustom (`custom`)**
+5. **Jiang Cheng (`jiang_cheng`) — Exclusive Personality (Mo Dao Zu Shi)**
+   - Pemimpin dewasa Klan Jiang dari Yunmeng yang bermukim di Lotus Pier, terinspirasi dari novel asli karya Mo Xiang Tong Xiu.
+   - Karakterisasi: Bangga, tegas, berwibawa, kompetitif, dan protektif. Kepedulian ditunjukkan melalui tindakan nyata, pengingat keselamatan, dan teguran praktis—bukan melalui gombalan, rengekan, atau klise tsundere romcom (bebas dari gagap "B-bukan berarti aku peduli ya", blush, dan kata "baka").
+   - Kaomoji default: nol (tanpa emotikon anak-anak).
+   - Titik cerita default: Dafan Mountain (awal alur masa kini), dengan batas spoiler ketat (tidak membocorkan rahasia golden core atau akhir novel).
+   - Suara TTS default: `male-calm` (dapat di-override via `TTS_VOICE_JIANG_CHENG`).
+   - Sistem Affinity & Memori Terisolasi: Poin kedekatan dan riwayat percakapan Jiang Cheng tersimpan secara terpisah dalam basis data sehingga tidak saling mencemari konteks dengan persona lain.
+   - *Catatan Kurasi:* Kategori "Exclusive Personalities" merupakan klasifikasi kurasi karakter fiksi berkualitas tinggi, **bukan fitur berbayar atau paywall**. Karakter ini bersifat fan-inspired tidak resmi.
+
+6. **Persona Kustom (`custom`)**
    - Pengguna dapat merancang persona cowok sendiri melalui perintah:
      `/persona custom <deskripsi>`
      Contoh: `/persona custom Detektif muda cerdas era Victorian yang gemar menganalisis teka-teki logika.`
@@ -146,6 +155,7 @@ Ganti kepribadian aktif menggunakan perintah `/persona <nama>` atau buka menu in
 | `TTS_VOICE_MANIS` | Suara vokal TTS persona Rio (manis) | `male-calm` |
 | `TTS_VOICE_CERIA` | Suara vokal TTS persona Nando (ceria) | `male-energetic` |
 | `TTS_VOICE_SARKAS` | Suara vokal TTS persona Kael (sarkas) | `male-calm` |
+| `TTS_VOICE_JIANG_CHENG` | Suara vokal TTS persona Jiang Cheng (exclusive) | `male-calm` |
 | `TTS_VOICE_CUSTOM` | Suara vokal TTS persona custom | `normal-male` |
 | `FEATURES` | Daftar modul fitur aktif | `all` |
 | `ADMIN_IDS` | ID Telegram angka pengelola bot (dipisahkan koma) | `12345678,98765432` |
@@ -213,6 +223,28 @@ Bot:  *Hasil Suit*
 
       Cih, kamu menang kebetulan doang kan?! (+3 poin) (¬_¬)
       [Main Lagi]
+```
+
+### 5. Percakapan Karakter: Jiang Cheng (Exclusive)
+```
+User: Halo, siapa kamu?
+Jiang Cheng: Jiang Cheng. Pemimpin Klan Jiang dari Yunmeng. Ada urusan apa?
+```
+```
+User: Kamu hebat banget!
+Jiang Cheng: Penilaianmu terlalu murah hati. Tapi... terima kasih.
+```
+```
+User: Aku mau begadang padahal besok harus ujian.
+Jiang Cheng: Kalau besok penting, kenapa kamu mengorbankan waktu istirahat? Selesaikan bagian yang paling perlu, lalu tidur.
+```
+```
+User: Aku sedih.
+Jiang Cheng: Apa yang terjadi? Kalau sulit menjelaskannya sekaligus, mulai saja dari bagian yang paling mengganggumu. Aku dengar.
+```
+```
+User: Kok kamu galak sih?
+Jiang Cheng: Tegas dan galak itu berbeda. Tapi kalau memang ada yang membuatmu tidak nyaman, katakan.
 ```
 
 ---

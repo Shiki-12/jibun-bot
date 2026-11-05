@@ -10,12 +10,15 @@ import {
 export { isGroupAdmin };
 
 export function renderPersonaSelector(currentPersonaId = 'tsundere') {
-  const personas = [
+  const defaultPersonas = [
     { id: 'tsundere', name: 'Raka (Tsundere)' },
     { id: 'manis', name: 'Rio (Manis)' },
     { id: 'ceria', name: 'Nando (Ceria)' },
     { id: 'sarkas', name: 'Kael (Sarkas)' },
-    { id: 'custom', name: 'Custom Persona' },
+  ];
+
+  const exclusivePersonas = [
+    { id: 'jiang_cheng', name: 'Jiang Cheng (Mo Dao Zu Shi)' },
   ];
 
   const lines = [
@@ -28,11 +31,24 @@ export function renderPersonaSelector(currentPersonaId = 'tsundere') {
   ];
 
   const keyboard = new InlineKeyboard();
-  personas.forEach((p, idx) => {
+
+  // 1. Default Personalities
+  defaultPersonas.forEach((p, idx) => {
     const activeMark = p.id === currentPersonaId ? ' [Aktif]' : '';
     keyboard.text(`${p.name}${activeMark}`, `persona:set:${p.id}`);
     if (idx % 2 === 1) keyboard.row();
   });
+
+  // 2. Exclusive Personalities
+  keyboard.row();
+  exclusivePersonas.forEach((p) => {
+    const activeMark = p.id === currentPersonaId ? ' [Aktif]' : '';
+    keyboard.text(`${p.name}${activeMark}`, `persona:set:${p.id}`).row();
+  });
+
+  // 3. Custom Persona
+  const customActiveMark = currentPersonaId === 'custom' ? ' [Aktif]' : '';
+  keyboard.text(`Custom Persona${customActiveMark}`, 'persona:set:custom');
 
   return { text: lines.join('\n'), keyboard };
 }

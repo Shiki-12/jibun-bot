@@ -53,6 +53,13 @@ export function getUserExportData(userId) {
   const affinity =
     db.prepare('SELECT points, level, last_gain_date, gained_today, last_chat_at FROM affinity WHERE user_id = ?').get(userId) || null;
 
+  let personaAffinity = [];
+  try {
+    personaAffinity = db
+      .prepare('SELECT persona_id, points, level, last_gain_date, gained_today, last_chat_at FROM persona_affinity WHERE user_id = ?')
+      .all(userId);
+  } catch {}
+
   const gameScores = db
     .prepare('SELECT chat_id, points, wins, losses, draws, updated_at FROM game_scores WHERE user_id = ?')
     .all(userId);
@@ -81,6 +88,7 @@ export function getUserExportData(userId) {
       logs: habitLogs.filter((l) => l.habit_id === h.id),
     })),
     affinity,
+    persona_affinity: personaAffinity,
     game_scores: gameScores,
     custom_persona: customPersona,
     proactive_settings: proactive,
@@ -120,6 +128,9 @@ export function deleteUserData(userId) {
 
     // 7. Kedekatan & game
     db.prepare('DELETE FROM affinity WHERE user_id = ?').run(userId);
+    try {
+      db.prepare('DELETE FROM persona_affinity WHERE user_id = ?').run(userId);
+    } catch {}
     db.prepare('DELETE FROM game_scores WHERE user_id = ?').run(userId);
 
     // 8. Persona custom & chat proaktif
@@ -129,6 +140,9 @@ export function deleteUserData(userId) {
     // 9. Riwayat pesan, ringkasan, dan pemakaian token
     db.prepare('DELETE FROM messages WHERE chat_id = ?').run(userId);
     db.prepare('DELETE FROM summaries WHERE chat_id = ?').run(userId);
+    try {
+      db.prepare('DELETE FROM persona_summaries WHERE chat_id = ?').run(userId);
+    } catch {}
     db.prepare('DELETE FROM usage WHERE user_id = ?').run(userId);
 
     // 10. Profil pengguna di tabel users

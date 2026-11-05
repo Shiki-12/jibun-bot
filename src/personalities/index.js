@@ -2,6 +2,7 @@ import { tsundere } from './tsundere.js';
 import { manis } from './manis.js';
 import { ceria } from './ceria.js';
 import { sarkas } from './sarkas.js';
+import { jiang_cheng } from './jiang_cheng.js';
 import { getDb } from '../core/db.js';
 import { GLOBAL_SAFETY_RULES } from '../core/actions.js';
 
@@ -10,7 +11,29 @@ const all = {
   manis,
   ceria,
   sarkas,
+  jiang_cheng,
 };
+
+export const PERSONALITY_METADATA = {
+  tsundere: { id: 'tsundere', name: 'Raka', category: 'default', source: null },
+  manis: { id: 'manis', name: 'Rio', category: 'default', source: null },
+  ceria: { id: 'ceria', name: 'Nando', category: 'default', source: null },
+  sarkas: { id: 'sarkas', name: 'Kael', category: 'default', source: null },
+  jiang_cheng: {
+    id: 'jiang_cheng',
+    name: 'Jiang Cheng',
+    category: 'exclusive',
+    source: 'Mo Dao Zu Shi',
+    subtitle: 'Pemimpin Klan Jiang dari Yunmeng',
+  },
+  custom: { id: 'custom', name: 'Custom Persona', category: 'custom', source: null },
+};
+
+export function listPersonalitiesMetadata() {
+  return listPersonalities().map(
+    (id) => PERSONALITY_METADATA[id] || { id, name: id, category: 'default', source: null },
+  );
+}
 
 export function buildCustomPersonality({ name = 'Custom', description = '' } = {}) {
   const safeDesc = (description || '').trim().slice(0, 800);

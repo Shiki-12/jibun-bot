@@ -76,14 +76,26 @@ function renderGifMenu() {
   return { text, keyboard };
 }
 
-function renderPersonaMenu() {
+const PERSONA_LABELS = {
+  tsundere: 'Raka (Tsundere)',
+  manis: 'Rio (Manis)',
+  ceria: 'Nando (Ceria)',
+  sarkas: 'Kael (Sarkas)',
+  jiang_cheng: 'Jiang Cheng (Exclusive)',
+  custom: 'Custom Persona',
+};
+
+export function renderPersonaMenu() {
   const personas = listPersonalities();
   const keyboard = new InlineKeyboard();
 
-  for (const id of personas) {
-    keyboard.text(id, `set:val:persona:${id}`);
-  }
-  keyboard.row().text('Kembali', 'set:menu:main');
+  personas.forEach((id, idx) => {
+    const label = PERSONA_LABELS[id] || id;
+    keyboard.text(label, `set:val:persona:${id}`);
+    if (idx % 2 === 1) keyboard.row();
+  });
+  if (personas.length % 2 !== 0) keyboard.row();
+  keyboard.text('Kembali', 'set:menu:main');
 
   const text = '*Pilih Persona Aktif:*\n(Pengaturan persona per-chat)';
   return { text, keyboard };

@@ -176,7 +176,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
 
       if (ctx.from?.id) {
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
-        recordInteraction(ctx.from.id, tz);
+        recordInteraction(ctx.from.id, tz, Date.now(), activePersona.id);
         resetProactiveUnreplied(ctx.from.id);
       }
 
@@ -194,7 +194,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
           try {
             raw = await generateVisionReply({
               systemPrompt: dynamicPrompt,
-              history: getHistory(chatId),
+              history: getHistory(chatId, activePersona.id),
               caption: extra.vision.caption,
               imageDataUrl: extra.vision.imageUrl,
               userId: ctx.from?.id,
@@ -217,7 +217,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
         } else {
           raw = await generateReply({
             systemPrompt: dynamicPrompt,
-            history: getHistory(chatId),
+            history: getHistory(chatId, activePersona.id),
             userText,
             userId: ctx.from?.id,
           });
@@ -244,8 +244,8 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
         }
 
         const historyUserText = extra?.vision?.placeholder ?? userText;
-        addMessage(chatId, 'user', historyUserText);
-        addMessage(chatId, 'model', raw);
+        addMessage(chatId, 'user', historyUserText, activePersona.id);
+        addMessage(chatId, 'model', raw, activePersona.id);
 
         // F-64: Peringatan jika pemakaian token harian melebihi batas limit
         if (ctx.from?.id && process.env.DAILY_TOKEN_LIMIT) {
@@ -266,8 +266,8 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
           try {
             const count =
               getDb()
-                .prepare('SELECT count(*) as count FROM messages WHERE chat_id = ?')
-                .get(chatId)?.count ?? 0;
+                .prepare('SELECT count(*) as count FROM messages WHERE chat_id = ? AND (persona_id = ? OR (persona_id IS NULL AND ? != "jiang_cheng"))')
+                .get(chatId, activePersona.id, activePersona.id)?.count ?? 0;
 
             if (ctx.from?.id && count > 0 && count % 20 === 0) {
               await extractAndSaveFacts({
@@ -284,6 +284,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
                 generateReplyFn: generateReply,
                 threshold: maxHist,
                 batchSize: 12,
+                personaId: activePersona.id,
               });
             }
           } catch (mErr) {

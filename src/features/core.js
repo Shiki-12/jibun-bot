@@ -61,7 +61,8 @@ export default {
       description: 'Info tentang persona dan bot',
       handler: async (ctx) => {
         const { persona, id, source } = getEffectivePersona(ctx);
-        const text = `Personality aktif: ${persona.name} (${id}) [sumber: ${source}]\nTersedia: ${listPersonalities().join(', ')}`;
+        const meta = persona?.category === 'exclusive' ? ` [Exclusive: ${persona.source ?? 'Fan-inspired'}]` : '';
+        const text = `Personality aktif: ${persona.name} (${id})${meta} [sumber: ${source}]\nTersedia: ${listPersonalities().join(', ')}`;
         await ctx.reply(text);
       },
     },

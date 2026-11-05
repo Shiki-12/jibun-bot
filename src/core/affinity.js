@@ -69,15 +69,31 @@ export function getTodayDateStr(now = Date.now(), tz = 'Asia/Jakarta') {
 /**
  * Ambil status affinity user saat ini. Menerapkan peluruhan sangat lambat jika lama tidak interaksi (> 7 hari).
  */
-export function getAffinity(userId, tz = 'Asia/Jakarta', now = Date.now()) {
+export function getAffinity(userId, tz = 'Asia/Jakarta', now = Date.now(), personaId = null) {
   const db = getDb();
-  let row = db
-    .prepare('SELECT * FROM affinity WHERE user_id = ?')
-    .get(userId);
+  let row = null;
+
+  if (personaId) {
+    try {
+      row = db
+        .prepare('SELECT * FROM persona_affinity WHERE user_id = ? AND persona_id = ?')
+        .get(userId, personaId);
+    } catch {}
+  }
+
+  // Fallback ke tabel affinity jika personaId tidak ada di persona_affinity dan bukan persona exclusive
+  if (!row && (!personaId || personaId !== 'jiang_cheng')) {
+    try {
+      row = db
+        .prepare('SELECT * FROM affinity WHERE user_id = ?')
+        .get(userId);
+    } catch {}
+  }
 
   if (!row) {
     return {
       userId,
+      personaId,
       points: 0,
       level: 0,
       title: AFFINITY_LEVELS[0].title,
@@ -106,6 +122,7 @@ export function getAffinity(userId, tz = 'Asia/Jakarta', now = Date.now()) {
 
   return {
     userId,
+    personaId,
     points,
     level,
     title: info.title,
@@ -121,10 +138,10 @@ export function getAffinity(userId, tz = 'Asia/Jakarta', now = Date.now()) {
 /**
  * Catat interaksi pesan baru user dan tambahkan poin kedekatan jika belum melewati batas harian.
  */
-export function recordInteraction(userId, tz = 'Asia/Jakarta', now = Date.now()) {
+export function recordInteraction(userId, tz = 'Asia/Jakarta', now = Date.now(), personaId = null) {
   const db = getDb();
   const todayStr = getTodayDateStr(now, tz);
-  const current = getAffinity(userId, tz, now);
+  const current = getAffinity(userId, tz, now, personaId);
 
   const remainingDaily = Math.max(0, DAILY_POINTS_CAP - current.gainedToday);
   const pointsToAdd = Math.min(POINTS_PER_INTERACTION, remainingDaily);
@@ -133,31 +150,38 @@ export function recordInteraction(userId, tz = 'Asia/Jakarta', now = Date.now())
   const newGainedToday = current.gainedToday + pointsToAdd;
   const newLevel = computeLevel(newPoints);
 
-  db.prepare(
-    `INSERT INTO affinity (user_id, points, level, last_gain_date, gained_today, last_chat_at)
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(user_id) DO UPDATE SET
-       points = ?,
-       level = ?,
-       last_gain_date = ?,
-       gained_today = ?,
-       last_chat_at = ?`,
-  ).run(
-    userId,
-    newPoints,
-    newLevel,
-    todayStr,
-    newGainedToday,
-    now,
-    newPoints,
-    newLevel,
-    todayStr,
-    newGainedToday,
-    now,
-  );
+  if (personaId) {
+    try {
+      db.prepare(
+        `INSERT INTO persona_affinity (user_id, persona_id, points, level, last_gain_date, gained_today, last_chat_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(user_id, persona_id) DO UPDATE SET
+           points = excluded.points,
+           level = excluded.level,
+           last_gain_date = excluded.last_gain_date,
+           gained_today = excluded.gained_today,
+           last_chat_at = excluded.last_chat_at`,
+      ).run(userId, personaId, newPoints, newLevel, todayStr, newGainedToday, now);
+    } catch {}
+  }
+
+  // Jika tidak ada personaId atau persona default, perbarui juga tabel global affinity
+  if (!personaId || personaId !== 'jiang_cheng') {
+    db.prepare(
+      `INSERT INTO affinity (user_id, points, level, last_gain_date, gained_today, last_chat_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET
+         points = excluded.points,
+         level = excluded.level,
+         last_gain_date = excluded.last_gain_date,
+         gained_today = excluded.gained_today,
+         last_chat_at = excluded.last_chat_at`,
+    ).run(userId, newPoints, newLevel, todayStr, newGainedToday, now);
+  }
 
   return {
     userId,
+    personaId,
     points: newPoints,
     level: newLevel,
     addedPoints: pointsToAdd,

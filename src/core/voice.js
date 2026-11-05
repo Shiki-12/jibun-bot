@@ -5,6 +5,7 @@ export const PERSONA_VOICES = {
   manis: 'male-calm',
   ceria: 'male-energetic',
   sarkas: 'male-calm',
+  jiang_cheng: 'male-calm',
   custom: 'normal-male',
 };
 

@@ -177,7 +177,7 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
   // Sisipkan ringkasan percakapan sebelumnya jika tersedia (F-14)
   if (ctx?.chat?.id) {
     try {
-      const summary = getSummary(ctx.chat.id);
+      const summary = getSummary(ctx.chat.id, persona?.id);
       if (summary) {
         prompt += `\n\n## Ringkasan Percakapan Sebelumnya\n${summary}`;
       }
@@ -198,8 +198,10 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
   if (ctx?.from?.id) {
     try {
       const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
-      const aff = getAffinity(ctx.from.id, tz);
-      prompt += `\n\n## Level Kedekatan (Affinity)\nStatus hubungan saat ini: Level ${aff.level} - "${aff.title}" (${aff.points} poin).\nInstruksi nada bicara: ${aff.promptInstruction}`;
+      const aff = getAffinity(ctx.from.id, tz, Date.now(), persona?.id);
+      const title = persona?.affinityTitles?.[aff.level] ?? aff.title;
+      const instruction = persona?.affinityInstructions?.[aff.level] ?? aff.promptInstruction;
+      prompt += `\n\n## Level Kedekatan (Affinity)\nStatus hubungan saat ini: Level ${aff.level} - "${title}" (${aff.points} poin).\nInstruksi nada bicara: ${instruction}`;
     } catch {}
   }
 
