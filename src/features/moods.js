@@ -9,14 +9,14 @@ import {
 import { getSetting } from '../core/settings.js';
 
 export const MEDICAL_DISCLAIMER =
-  '_Catatan: Fitur jurnal ini adalah refleksi pribadi dan BUKAN pengganti terapi, konseling, atau diagnosis medis profesional._';
+  '_Note: This journal feature is for personal reflection and is NOT a substitute for professional therapy, counseling, or medical diagnosis._';
 
 export const CRISIS_RESPONSE =
-  'Hei, tolong jangan berkata seperti itu... Aku di sini mendengarkan kamu. Kamu tidak sendirian dan perasaanmu itu penting. Tolong segera hubungi orang terdekat yang kamu percaya atau layanan bantuan resmi:\n' +
+  'Please do not say things like that... I am here listening to you. You are not alone and your feelings matter. Please reach out to someone you trust or official support services immediately:\n' +
   '• Hotline SEJIWA Kemenkes RI: Telepon 119 (ekstensi 8)\n' +
   '• Halo Kemenkes: 1500-567\n' +
   '• Layanan Darurat Nasional: 112\n' +
-  '• Atau fasilitas kesehatan terdekat (Puskesmas / IGD). Tolong jaga dirimu baik-baik ya.';
+  '• Or the nearest medical facility (Puskesmas / ER). Please take good care of yourself.';
 
 function buildMoodKeyboard() {
   return new InlineKeyboard()
@@ -39,12 +39,12 @@ export function getPersonaMoodComment(persona, score) {
 
   // Fallback umum netral
   if (numScore <= 2) {
-    return 'Hari yang berat ya... Istirahatlah sejenak dan jangan terlalu keras pada dirimu sendiri.';
+    return 'A tough day... Take a rest and do not be too hard on yourself.';
   }
   if (numScore === 3) {
-    return 'Catatan tersimpan. Semoga sisa harimu berjalan tenang dan lancar.';
+    return 'Note saved. May the rest of your day go smoothly and calmly.';
   }
-  return 'Senang mendengar harimu menyenangkan! Pertahankan energi positifmu!';
+  return 'Glad to hear you are having a good day! Keep up the positive energy!';
 }
 
 export default {
@@ -53,7 +53,7 @@ export default {
   commands: [
     {
       name: 'mood',
-      description: 'Catat mood harian (skala 1-5, opsional dengan catatan)',
+      description: 'Record daily mood (1-5 scale, optional note)',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -67,14 +67,14 @@ export default {
         // Jika user memanggil /mood tanpa argumen atau format bukan 1-5
         if (!scoreArg || isNaN(parseInt(scoreArg, 10)) || parseInt(scoreArg, 10) < 1 || parseInt(scoreArg, 10) > 5) {
           const prompt =
-            `*Check-in Mood Harian*\n\n` +
-            `Bagaimana perasaanmu saat ini? Pilih skala 1 sampai 5:\n\n` +
-            `• 1: Sangat Buruk (T_T)\n` +
-            `• 2: Buruk (._.)\n` +
-            `• 3: Biasa Saja (-_-)\n` +
-            `• 4: Baik (^_^)\n` +
-            `• 5: Sangat Baik (^▽^)\n\n` +
-            `_Bisa juga langsung ketik:_\n\`/mood <1-5> [catatan]\`\nContoh: \`/mood 4 Hari ini seru banget!\`\n\n` +
+            `*Daily Mood Check-in*\n\n` +
+            `How are you feeling right now? Choose on a scale from 1 to 5:\n\n` +
+            `• 1: Very Bad (T_T)\n` +
+            `• 2: Bad (._.)\n` +
+            `• 3: Neutral (-_-)\n` +
+            `• 4: Good (^_^)\n` +
+            `• 5: Very Good (^▽^)\n\n` +
+            `_You can also type:_\n\`/mood <1-5> [note]\`\nExample: \`/mood 4 Had a great day!\`\n\n` +
             `${MEDICAL_DISCLAIMER}`;
 
           await ctx.reply(prompt, {
@@ -95,12 +95,12 @@ export default {
         }
 
         const saved = recordMood({ userId, score, note, tz });
-        const meta = MOOD_LEVELS[score] || { emoji: '(-_-)', label: 'Biasa' };
+        const meta = MOOD_LEVELS[score] || { emoji: '(-_-)', label: 'Neutral' };
         const comment = getPersonaMoodComment(ctx.persona, score);
-        const notePart = saved.note ? `\n*Catatan:* _"${saved.note}"_` : '';
+        const notePart = saved.note ? `\n*Note:* _"${saved.note}"_` : '';
 
         const replyMsg =
-          `*Mood Tersimpan!* (${score}/5 ${meta.emoji} — ${meta.label})${notePart}\n\n` +
+          `*Mood Saved!* (${score}/5 ${meta.emoji} — ${meta.label})${notePart}\n\n` +
           `${comment}\n\n` +
           `${MEDICAL_DISCLAIMER}`;
 
@@ -110,7 +110,7 @@ export default {
 
     {
       name: 'moodweek',
-      description: 'Lihat ringkasan jurnal mood 7 hari terakhir',
+      description: 'View 7-day mood journal summary',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -120,7 +120,7 @@ export default {
 
         if (rows.length === 0) {
           await ctx.reply(
-            `Belum ada catatan mood dalam 7 hari terakhir.\nKetik \`/mood\` untuk mulai mencatat perasaanmu! (^_^)\n\n${MEDICAL_DISCLAIMER}`,
+            `No mood records in the last 7 days.\nType \`/mood\` to start tracking how you feel! (^_^)\n\n${MEDICAL_DISCLAIMER}`,
             { parse_mode: 'Markdown' },
           );
           return;
@@ -144,24 +144,24 @@ export default {
         const score = parseInt(scoreStr, 10);
 
         if (isNaN(score) || score < 1 || score > 5) {
-          await ctx.answerCallbackQuery({ text: 'Pilihan tidak valid!' });
+          await ctx.answerCallbackQuery({ text: 'Invalid selection!' });
           return;
         }
 
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
         recordMood({ userId, score, note: null, tz });
 
-        const meta = MOOD_LEVELS[score] || { emoji: '(-_-)', label: 'Biasa' };
+        const meta = MOOD_LEVELS[score] || { emoji: '(-_-)', label: 'Neutral' };
         const comment = getPersonaMoodComment(ctx.persona, score);
 
         const resultText =
-          `*Mood Tersimpan!* (${score}/5 ${meta.emoji} — ${meta.label})\n\n` +
+          `*Mood Saved!* (${score}/5 ${meta.emoji} — ${meta.label})\n\n` +
           `${comment}\n\n` +
-          `_Tips: Kamu juga bisa menulis jurnal dengan catatan cerita, contoh:_\n\`/mood ${score} kerjaan hari ini beres semua\`\n\n` +
+          `_Tip: You can also write a journal note, example:_\n\`/mood ${score} finished all work today\`\n\n` +
           `${MEDICAL_DISCLAIMER}`;
 
         await ctx.editMessageText(resultText, { parse_mode: 'Markdown' });
-        await ctx.answerCallbackQuery({ text: `Mood ${score}/5 tersimpan!` });
+        await ctx.answerCallbackQuery({ text: `Mood ${score}/5 saved!` });
       },
     },
   ],

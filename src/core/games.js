@@ -9,7 +9,7 @@ export function rollDice() {
 }
 
 export function flipCoin() {
-  return Math.random() < 0.5 ? 'Gambar' : 'Angka';
+  return Math.random() < 0.5 ? 'Heads' : 'Tails';
 }
 
 export function pickOption(options) {

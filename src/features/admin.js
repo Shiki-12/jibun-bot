@@ -26,7 +26,7 @@ export default {
   commands: [
     {
       name: 'stats',
-      description: 'Statistik operasional bot (khusus admin)',
+      description: 'Bot operational statistics (admin only)',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -35,28 +35,28 @@ export default {
 
         const stats = getAdminStats();
         const msg = [
-          '*Statistik Operasional Bot*',
+          '*Bot Operational Statistics*',
           '',
-          '*Pengguna & Aktivitas:*',
-          `• Total Pengguna: *${stats.totalUsers}*`,
-          `• Total Chat/Grup: *${stats.totalChats}*`,
-          `• Pengguna Aktif Hari Ini: *${stats.activeUsersToday}*`,
-          `• Pesan Hari Ini: *${stats.messagesToday}*`,
+          '*Users & Activity:*',
+          `• Total Users: *${stats.totalUsers}*`,
+          `• Total Chats/Groups: *${stats.totalChats}*`,
+          `• Active Users Today: *${stats.activeUsersToday}*`,
+          `• Messages Today: *${stats.messagesToday}*`,
           '',
-          '*Status Sistem:*',
-          `• Model LLM Aktif: \`${stats.activeModel}\``,
-          `• Mode Maintenance: *${stats.isMaintenance ? 'ON (Aktif)' : 'OFF (Normal)'}*`,
-          `• Pengguna Diblokir (Ban): *${stats.bannedCount}*`,
-          `• Pengingat Aktif (Pending): *${stats.pendingReminders}*`,
-          `• Memori Fakta Tersimpan: *${stats.factsCount}*`,
-          `• Catatan Pengeluaran: *${stats.expensesCount}* (Total: Rp ${stats.expensesTotal.toLocaleString('id-ID')})`,
+          '*System Status:*',
+          `• Active LLM Model: \`${stats.activeModel}\``,
+          `• Maintenance Mode: *${stats.isMaintenance ? 'ON (Active)' : 'OFF (Normal)'}*`,
+          `• Banned Users: *${stats.bannedCount}*`,
+          `• Active Reminders (Pending): *${stats.pendingReminders}*`,
+          `• Stored Facts (Memory): *${stats.factsCount}*`,
+          `• Expense Records: *${stats.expensesCount}* (Total: Rp ${stats.expensesTotal.toLocaleString('id-ID')})`,
           '',
-          '*Pemakaian Token & Kinerja LLM (Hari Ini):*',
-          `• Total Token: *${stats.tokensToday.toLocaleString('id-ID')}* (${stats.promptTokensToday.toLocaleString('id-ID')} prompt, ${stats.completionTokensToday.toLocaleString('id-ID')} completion)`,
-          `• Rata-rata Latensi: *${stats.avgLatencyMs} ms*`,
+          '*Token Usage & LLM Performance (Today):*',
+          `• Total Tokens: *${stats.tokensToday.toLocaleString('id-ID')}* (${stats.promptTokensToday.toLocaleString('id-ID')} prompt, ${stats.completionTokensToday.toLocaleString('id-ID')} completion)`,
+          `• Average Latency: *${stats.avgLatencyMs} ms*`,
           stats.usageByModel && stats.usageByModel.length > 0
-            ? `• Model Terpakai: ${stats.usageByModel.map((m) => `\`${m.model}\` (${m.tokens.toLocaleString('id-ID')})`).join(', ')}`
-            : '• Model Terpakai: _(belum ada panggilan hari ini)_',
+            ? `• Models Used: ${stats.usageByModel.map((m) => `\`${m.model}\` (${m.tokens.toLocaleString('id-ID')})`).join(', ')}`
+            : '• Models Used: _(no calls today)_',
         ].join('\n');
 
         await ctx.reply(msg, { parse_mode: 'Markdown' });
@@ -64,7 +64,7 @@ export default {
     },
     {
       name: 'ban',
-      description: 'Blokir user dari akses bot (/ban <user_id> [alasan])',
+      description: 'Ban user from bot access (/ban <user_id> [reason])',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -73,35 +73,35 @@ export default {
 
         const args = ctx.message?.text?.split(/\s+/).slice(1) || [];
         const targetId = Number(args[0]);
-        const reason = args.slice(1).join(' ').trim() || 'Melanggar aturan';
+        const reason = args.slice(1).join(' ').trim() || 'Rule violation';
 
         if (!targetId || isNaN(targetId) || targetId <= 0) {
           await ctx.reply(
-            'Format salah!\nGunakan: `/ban <user_id> [alasan]`\nContoh: `/ban 123456789 spamming`',
+            'Invalid format!\nUsage: `/ban <user_id> [reason]`\nExample: `/ban 123456789 spamming`',
             { parse_mode: 'Markdown' },
           );
           return;
         }
 
         if (isAdmin(targetId)) {
-          await ctx.reply('Tidak dapat memblokir sesama admin bot!');
+          await ctx.reply('Cannot ban a fellow bot admin!');
           return;
         }
 
         try {
           banUser({ userId: targetId, reason, adminId: ctx.from.id });
           await ctx.reply(
-            `*User Berhasil Diblokir!*\n• User ID: \`${targetId}\`\n• Alasan: ${reason}`,
+            `*User Successfully Banned!*\n• User ID: \`${targetId}\`\n• Reason: ${reason}`,
             { parse_mode: 'Markdown' },
           );
         } catch (err) {
-          await ctx.reply(`Gagal memblokir user: ${err.message}`);
+          await ctx.reply(`Failed to ban user: ${err.message}`);
         }
       },
     },
     {
       name: 'unban',
-      description: 'Buka blokir user (/unban <user_id>)',
+      description: 'Unban user (/unban <user_id>)',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -113,7 +113,7 @@ export default {
 
         if (!targetId || isNaN(targetId) || targetId <= 0) {
           await ctx.reply(
-            'Format salah!\nGunakan: `/unban <user_id>`\nContoh: `/unban 123456789`',
+            'Invalid format!\nUsage: `/unban <user_id>`\nExample: `/unban 123456789`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -122,11 +122,11 @@ export default {
         const success = unbanUser({ userId: targetId, adminId: ctx.from.id });
         if (success) {
           await ctx.reply(
-            `*User Berhasil Dibuka Blokirnya!*\n• User ID: \`${targetId}\``,
+            `*User Successfully Unbanned!*\n• User ID: \`${targetId}\``,
             { parse_mode: 'Markdown' },
           );
         } else {
-          await ctx.reply(`User ID \`${targetId}\` tidak ditemukan di daftar blokir.`, {
+          await ctx.reply(`User ID \`${targetId}\` not found in banned list.`, {
             parse_mode: 'Markdown',
           });
         }
@@ -134,7 +134,7 @@ export default {
     },
     {
       name: 'broadcast',
-      description: 'Kirim pesan siaran ke semua user terdaftar (/broadcast <teks>)',
+      description: 'Broadcast message to all registered users (/broadcast <text>)',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -144,7 +144,7 @@ export default {
         const text = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
         if (!text) {
           await ctx.reply(
-            'Format salah!\nGunakan: `/broadcast <isi pesan pengumuman>`',
+            'Invalid format!\nUsage: `/broadcast <announcement message>`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -161,18 +161,18 @@ export default {
         });
 
         const keyboard = new InlineKeyboard()
-          .text('Kirim Sekarang', `adm:bc:send:${bcId}`)
-          .text('Batal', `adm:bc:cancel:${bcId}`);
+          .text('Send Now', `adm:bc:send:${bcId}`)
+          .text('Cancel', `adm:bc:cancel:${bcId}`);
 
         const previewMsg = [
-          '*Konfirmasi Siaran (Broadcast)*',
+          '*Broadcast Confirmation*',
           '',
-          `• Target Penerima: *${targetCount} pengguna*`,
+          `• Target Recipients: *${targetCount} users*`,
           '',
-          '*Isi Pesan:*',
+          '*Message Content:*',
           text,
           '',
-          'Apakah kamu yakin ingin mengirimkan pesan ini ke seluruh pengguna terdaftar?',
+          'Are you sure you want to broadcast this message to all registered users?',
         ].join('\n');
 
         await ctx.reply(previewMsg, {
@@ -183,7 +183,7 @@ export default {
     },
     {
       name: 'model',
-      description: 'Cek atau ganti model LLM aktif sementara (/model [nama_model])',
+      description: 'Check or temporarily change active LLM model (/model [model_name])',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -195,7 +195,7 @@ export default {
         if (!newModel) {
           const current = getActiveModel();
           await ctx.reply(
-            `*Model LLM Saat Ini:*\n\`${current}\`\n\nUntuk mengganti model sementara tanpa restart:\n\`/model <nama_model>\``,
+            `*Current LLM Model:*\n\`${current}\`\n\nTo temporarily change model without restart:\n\`/model <model_name>\``,
             { parse_mode: 'Markdown' },
           );
           return;
@@ -204,17 +204,17 @@ export default {
         try {
           setActiveModel(newModel, ctx.from.id);
           await ctx.reply(
-            `*Model LLM Berhasil Diganti!*\nModel aktif sekarang: \`${newModel}\`\nPerubahan langsung berlaku untuk panggilan LLM berikutnya.`,
+            `*LLM Model Successfully Changed!*\nActive model now: \`${newModel}\`\nChanges take effect immediately for subsequent calls.`,
             { parse_mode: 'Markdown' },
           );
         } catch (err) {
-          await ctx.reply(`Gagal mengubah model: ${err.message}`);
+          await ctx.reply(`Failed to change model: ${err.message}`);
         }
       },
     },
     {
       name: 'maintenance',
-      description: 'Atur mode pemeliharaan bot (/maintenance [on|off])',
+      description: 'Set bot maintenance mode (/maintenance [on|off])',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
@@ -226,7 +226,7 @@ export default {
         if (mode === 'on') {
           setMaintenanceMode(true, ctx.from.id);
           await ctx.reply(
-            '*Mode Maintenance Diaktifkan (ON)*\nPengguna non-admin tidak dapat mengakses atau memanggil bot.',
+            '*Maintenance Mode Enabled (ON)*\nNon-admin users cannot access or call the bot.',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -235,7 +235,7 @@ export default {
         if (mode === 'off') {
           setMaintenanceMode(false, ctx.from.id);
           await ctx.reply(
-            '*Mode Maintenance Dimatikan (OFF)*\nBot kembali aktif dan dapat digunakan oleh seluruh pengguna.',
+            '*Maintenance Mode Disabled (OFF)*\nBot is active again for all users.',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -243,14 +243,14 @@ export default {
 
         const current = isMaintenanceMode();
         await ctx.reply(
-          `*Status Mode Maintenance:*\n• Status: *${current ? 'ON (Aktif)' : 'OFF (Mati)'}*\n\nGunakan: \`/maintenance on\` atau \`/maintenance off\`.`,
+          `*Maintenance Mode Status:*\n• Status: *${current ? 'ON (Active)' : 'OFF (Inactive)'}*\n\nUsage: \`/maintenance on\` or \`/maintenance off\`.`,
           { parse_mode: 'Markdown' },
         );
       },
     },
     {
       name: 'cleanreminders',
-      description: 'Bersihkan pengingat failed & chat palsu/tidak valid (khusus admin)',
+      description: 'Clean up failed & invalid chat reminders (admin only)',
       adminOnly: true,
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) return;
@@ -268,7 +268,7 @@ export default {
         `).all();
 
         if (invalidRows.length === 0) {
-          await ctx.reply('Tidak ada pengingat tidak valid yang perlu dibersihkan.');
+          await ctx.reply('No invalid reminders found to clean up.');
           return;
         }
 
@@ -278,17 +278,17 @@ export default {
           .join('\n');
 
         const keyboard = new InlineKeyboard()
-          .text(`Hapus ${invalidRows.length} Pengingat`, 'adm:cleanrem:confirm')
-          .text('Batal', 'adm:cleanrem:cancel');
+          .text(`Delete ${invalidRows.length} Reminders`, 'adm:cleanrem:confirm')
+          .text('Cancel', 'adm:cleanrem:cancel');
 
         const msg = [
-          '*Konfirmasi Pembersihan Pengingat Tidak Valid*',
+          '*Confirmation: Clean Up Invalid Reminders*',
           '',
-          `Ditemukan *${invalidRows.length}* pengingat berstatus 'failed' atau dari chat tidak valid/palsu:`,
+          `Found *${invalidRows.length}* reminders with 'failed' status or invalid chat IDs:`,
           previewList,
-          invalidRows.length > 5 ? `_...dan ${invalidRows.length - 5} lainnya_` : '',
+          invalidRows.length > 5 ? `_...and ${invalidRows.length - 5} more_` : '',
           '',
-          'Apakah kamu yakin ingin menghapus seluruh pengingat ini dari database?',
+          'Are you sure you want to delete these reminders from the database?',
         ].filter(Boolean).join('\n');
 
         await ctx.reply(msg, { parse_mode: 'Markdown', reply_markup: keyboard });
@@ -301,7 +301,7 @@ export default {
       prefix: 'adm:cleanrem:confirm',
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
-          await ctx.answerCallbackQuery({ text: 'Akses ditolak.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Access denied.' }).catch(() => {});
           return;
         }
 
@@ -319,11 +319,11 @@ export default {
         logAdminAction({
           adminId: ctx.from.id,
           action: 'clean_reminders',
-          details: `Menghapus ${res.changes} pengingat tidak valid`,
+          details: `Deleted ${res.changes} invalid reminders`,
         });
 
-        await ctx.answerCallbackQuery({ text: 'Pembersihan berhasil!' }).catch(() => {});
-        await ctx.editMessageText(`*Pembersihan Selesai!*\nBerhasil menghapus *${res.changes}* pengingat tidak valid dari database.`, {
+        await ctx.answerCallbackQuery({ text: 'Cleanup successful!' }).catch(() => {});
+        await ctx.editMessageText(`*Cleanup Completed!*\nSuccessfully deleted *${res.changes}* invalid reminders from database.`, {
           parse_mode: 'Markdown',
         }).catch(() => {});
       },
@@ -332,11 +332,11 @@ export default {
       prefix: 'adm:cleanrem:cancel',
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
-          await ctx.answerCallbackQuery({ text: 'Akses ditolak.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Access denied.' }).catch(() => {});
           return;
         }
-        await ctx.answerCallbackQuery({ text: 'Dibatalkan.' }).catch(() => {});
-        await ctx.editMessageText('*Pembersihan pengingat dibatalkan.*', {
+        await ctx.answerCallbackQuery({ text: 'Cancelled.' }).catch(() => {});
+        await ctx.editMessageText('*Reminder cleanup cancelled.*', {
           parse_mode: 'Markdown',
         }).catch(() => {});
       },
@@ -345,7 +345,7 @@ export default {
       prefix: 'adm:bc:send:',
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
-          await ctx.answerCallbackQuery({ text: 'Akses ditolak.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Access denied.' }).catch(() => {});
           return;
         }
 
@@ -354,15 +354,15 @@ export default {
 
         if (!bc) {
           await ctx.answerCallbackQuery({
-            text: 'Data siaran sudah kedaluwarsa atau tidak ditemukan.',
+            text: 'Broadcast data expired or not found.',
           }).catch(() => {});
           return;
         }
 
         deletePendingBroadcast(bcId);
-        await ctx.answerCallbackQuery({ text: 'Memulai pengiriman siaran...' }).catch(() => {});
+        await ctx.answerCallbackQuery({ text: 'Starting broadcast delivery...' }).catch(() => {});
 
-        await ctx.editMessageText('*Sedang mengirim siaran ke seluruh pengguna...*', {
+        await ctx.editMessageText('*Broadcasting to all users...*', {
           parse_mode: 'Markdown',
         }).catch(() => {});
 
@@ -376,15 +376,15 @@ export default {
         logAdminAction({
           adminId: ctx.from.id,
           action: 'broadcast',
-          details: `Total: ${result.total}, Sukses: ${result.successCount}, Gagal: ${result.failCount}`,
+          details: `Total: ${result.total}, Success: ${result.successCount}, Failed: ${result.failCount}`,
         });
 
         const reportMsg = [
-          '*Siaran Selesai Dikirim!*',
+          '*Broadcast Delivery Completed!*',
           '',
           `• Total Target: *${result.total}*`,
-          `• Berhasil: *${result.successCount}*`,
-          `• Gagal / Blokir: *${result.failCount}*`,
+          `• Successful: *${result.successCount}*`,
+          `• Failed / Blocked: *${result.failCount}*`,
         ].join('\n');
 
         await ctx.editMessageText(reportMsg, { parse_mode: 'Markdown' }).catch(() => {});
@@ -394,15 +394,15 @@ export default {
       prefix: 'adm:bc:cancel:',
       handler: async (ctx) => {
         if (!isAdmin(ctx.from?.id)) {
-          await ctx.answerCallbackQuery({ text: 'Akses ditolak.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Access denied.' }).catch(() => {});
           return;
         }
 
         const bcId = ctx.callbackQuery.data.slice('adm:bc:cancel:'.length);
         deletePendingBroadcast(bcId);
 
-        await ctx.answerCallbackQuery({ text: 'Siaran dibatalkan.' }).catch(() => {});
-        await ctx.editMessageText('*Siaran pesan telah dibatalkan.*', {
+        await ctx.answerCallbackQuery({ text: 'Broadcast cancelled.' }).catch(() => {});
+        await ctx.editMessageText('*Broadcast cancelled.*', {
           parse_mode: 'Markdown',
         }).catch(() => {});
       },

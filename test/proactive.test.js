@@ -186,9 +186,9 @@ describe('F-22: Mika Chat Duluan (Proaktif)', () => {
       });
 
       assert.ok(
-        msg.includes('nggak ada kabar') ||
-        msg.includes('ke mana aja') ||
-        msg.includes('Masih hidup'),
+        msg.includes('quiet all day') ||
+        msg.includes('Where have you been') ||
+        msg.includes('Still alive'),
       );
     });
   });
@@ -328,7 +328,7 @@ describe('F-22: Mika Chat Duluan (Proaktif)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('diaktifkan'));
+      assert.ok(replies[0].toLowerCase().includes('enabled'));
       assert.equal(getProactiveSettings(TEST_USERS[0]).enabled, 1);
     });
 
@@ -346,7 +346,7 @@ describe('F-22: Mika Chat Duluan (Proaktif)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('dimatikan'));
+      assert.ok(replies[0].toLowerCase().includes('disabled'));
       assert.equal(getProactiveSettings(TEST_USERS[0]).enabled, 0);
     });
 
@@ -363,8 +363,8 @@ describe('F-22: Mika Chat Duluan (Proaktif)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Pengaturan Chat Proaktif'));
-      assert.ok(replies[0].text.includes('Jam Tenang'));
+      assert.ok(replies[0].text.includes('Proactive Chat Settings'));
+      assert.ok(replies[0].text.includes('Quiet Hours'));
     });
 
     it('/quiet mengatur rentang jam tenang valid', async () => {
@@ -401,7 +401,7 @@ describe('F-22: Mika Chat Duluan (Proaktif)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('salah'));
+      assert.ok(replies[0].toLowerCase().includes('invalid'));
     });
   });
 });

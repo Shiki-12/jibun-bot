@@ -32,7 +32,7 @@ Bot ini menerapkan kebijakan **Zero Unicode Emoji**:
 - **Catatan (Notes):** `/note <teks>` (hashtag otomatis), `/note <id>`, `/notes` (paginasi 10 item), `/delnote <id>`, `/findnote <kata>`.
 - **Pesan Terjadwal:** `/morning <HH:mm>` (sapaan pagi, agenda to-do & ringkasan cuaca), `/night <HH:mm>` (evaluasi to-do malam & check-in mood), `/schedules`.
 - **Memori Jangka Panjang & Fakta:** Ekstraksi fakta profil otomatis, peringkasan riwayat panjang, `/memory`, `/delfact <id>`, `/clearfacts`.
-- **Sistem Affinity (Level Dere):** Level kedekatan bertahap (0-4), batas poin harian anti-farming, peluruhan lembut, kartu status `/status`.
+- **Sistem Affinity (Level Dere):** Level kedekatan bertahap (0-4), pintasan penyesuaian level langsung per-persona (`/setaffinity [0-4|min|max]`), batas poin harian anti-farming, peluruhan lembut, kartu status `/status` dengan tombol inline ubah kedekatan.
 - **Stiker Telegram:** Pengelolaan stiker reaksi oleh admin (`/addsticker <mood>`), `/stickers`, `/delsticker <id>`, dan respons otomatis terhadap stiker pengguna.
 - **Chat Proaktif:** Sapaan otomatis saat pengguna lama tidak aktif (opt-in `/proactive on|off`), evaluasi jam tenang (`/quiet`), batas 1x/hari.
 - **Game & Hiburan:** `/suit` (batu-gunting-kertas), `/tebak` (angka 1-100), `/quiz` (trivia), `/truth`, `/dare`, `/pilih` (opsi acak), `/dadu`, `/koin`, papan peringkat `/skor`.

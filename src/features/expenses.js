@@ -14,19 +14,19 @@ import {
 } from '../core/expenses.js';
 
 /**
- * Buat inline keyboard untuk koreksi kategori pengeluaran.
+ * Build inline keyboard to correct expense category.
  */
 export function buildCategoryKeyboard(expenseId) {
   return new InlineKeyboard()
-    .text('Makanan', `exp:cat:${expenseId}:makanan`)
+    .text('Food', `exp:cat:${expenseId}:makanan`)
     .text('Transport', `exp:cat:${expenseId}:transport`)
-    .text('Belanja', `exp:cat:${expenseId}:belanja`)
+    .text('Shopping', `exp:cat:${expenseId}:belanja`)
     .row()
-    .text('Tagihan', `exp:cat:${expenseId}:tagihan`)
-    .text('Hiburan', `exp:cat:${expenseId}:hiburan`)
-    .text('Kesehatan', `exp:cat:${expenseId}:kesehatan`)
+    .text('Bills', `exp:cat:${expenseId}:tagihan`)
+    .text('Entertainment', `exp:cat:${expenseId}:hiburan`)
+    .text('Health', `exp:cat:${expenseId}:kesehatan`)
     .row()
-    .text('Lainnya', `exp:cat:${expenseId}:lainnya`);
+    .text('Other', `exp:cat:${expenseId}:lainnya`);
 }
 
 export default {
@@ -35,7 +35,7 @@ export default {
   commands: [
     {
       name: 'catat',
-      description: 'Catat pengeluaran (/catat <nominal> <keterangan>, contoh: /catat 25k makan siang)',
+      description: 'Record expense (/catat <amount> <note>, example: /catat 25k lunch)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const userId = ctx.from?.id;
@@ -46,19 +46,19 @@ export default {
 
         if (parts.length === 0) {
           await ctx.reply(
-            'Format perintah: `/catat <nominal> <keterangan>`\n' +
-              'Contoh:\n' +
-              '• `/catat 25k makan siang`\n' +
-              '• `/catat 50rb bensin pertalite`\n' +
-              '• `/catat 1,5jt bayar kosan`\n' +
-              '• `/catat 25.000 belanja sabun`',
+            'Command format: `/catat <amount> <note>`\n' +
+              'Examples:\n' +
+              '• `/catat 25k lunch`\n' +
+              '• `/catat 50rb gasoline`\n' +
+              '• `/catat 1,5jt rent`\n' +
+              '• `/catat 25.000 groceries`',
             { parse_mode: 'Markdown' },
           );
           return;
         }
 
         const amountRaw = parts[0];
-        const noteRaw = parts.slice(1).join(' ').trim() || 'Pengeluaran';
+        const noteRaw = parts.slice(1).join(' ').trim() || 'Expense';
 
         try {
           const exp = addExpense({
@@ -70,17 +70,17 @@ export default {
           const catLabel = CATEGORY_LABELS[exp.category] || exp.category;
           const template =
             p.strings?.expenseRecorded ??
-            '*Pengeluaran Dicatat!*\n' +
-              '• Nominal: *{amount}*\n' +
-              '• Kategori: *{category}*\n' +
-              '• Keterangan: "{note}"';
+            '*Expense Recorded!*\n' +
+              '• Amount: *{amount}*\n' +
+              '• Category: *{category}*\n' +
+              '• Note: "{note}"';
 
           const replyText = template
             .replace('{amount}', formatRupiah(exp.amount))
             .replace('{category}', catLabel)
             .replace('{note}', exp.note);
 
-          const footer = '\n\n_Koreksi kategori jika belum sesuai:_';
+          const footer = '\n\n_Correct category if needed:_';
           await ctx.reply(`${replyText}${footer}`, {
             parse_mode: 'Markdown',
             reply_markup: buildCategoryKeyboard(exp.id),
@@ -92,7 +92,7 @@ export default {
     },
     {
       name: 'rekap',
-      description: 'Lihat ringkasan pengeluaran (/rekap, /rekap minggu, /rekap bulan)',
+      description: 'View expense summary (/rekap, /rekap minggu, /rekap bulan)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const userId = ctx.from?.id;
@@ -108,27 +108,27 @@ export default {
         if (summary.totalCount === 0) {
           const emptyMsg =
             p.strings?.expenseEmpty ??
-            `Belum ada catatan pengeluaran untuk periode *${summary.periodLabel}*.`;
+            `No expenses recorded for *${summary.periodLabel}*.`;
           await ctx.reply(emptyMsg, { parse_mode: 'Markdown' });
           return;
         }
 
         const headerTemplate =
           p.strings?.expenseRekapHeader ??
-          '*Rekap Pengeluaran ({period}):*';
+          '*Expense Summary ({period}):*';
         const header = headerTemplate.replace('{period}', summary.periodLabel);
 
         const lines = summary.breakdown.map((item) => {
           return `• ${item.label}: *${formatRupiah(item.amount)}* (${item.percentage}% - ${item.count}x)`;
         });
 
-        const totalStr = `\n*Total Pengeluaran:* *${formatRupiah(summary.totalAmount)}* (${summary.totalCount} transaksi)`;
+        const totalStr = `\n*Total Expenses:* *${formatRupiah(summary.totalAmount)}* (${summary.totalCount} transactions)`;
         const footer =
-          '\n\n_Perintah lain:_\n' +
-          '• `/rekap hari` (Hari ini)\n' +
-          '• `/rekap minggu` (Minggu ini)\n' +
-          '• `/rekap bulan` (Bulan ini)\n' +
-          '• `/exportcsv` (Unduh laporan CSV)';
+          '\n\n_Other commands:_\n' +
+          '• `/rekap hari` (Today)\n' +
+          '• `/rekap minggu` (This week)\n' +
+          '• `/rekap bulan` (This month)\n' +
+          '• `/exportcsv` (Download CSV report)';
 
         await ctx.reply(
           `${header}\n\n${lines.join('\n')}\n${totalStr}${footer}`,
@@ -138,7 +138,7 @@ export default {
     },
     {
       name: 'hapuscatat',
-      description: 'Hapus catatan pengeluaran berdasarkan ID (/hapuscatat <id>)',
+      description: 'Delete expense record by ID (/hapuscatat <id>)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const userId = ctx.from?.id;
@@ -149,7 +149,7 @@ export default {
         const expenseId = parseInt(parts[0], 10);
 
         if (isNaN(expenseId)) {
-          await ctx.reply('Gunakan format: `/hapuscatat <id>`\nContoh: `/hapuscatat 5`', {
+          await ctx.reply('Use format: `/hapuscatat <id>`\nExample: `/hapuscatat 5`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -159,19 +159,19 @@ export default {
         if (ok) {
           const template =
             p.strings?.expenseDeleted ??
-            'Catatan pengeluaran #{id} berhasil dihapus.';
+            'Expense record #{id} deleted.';
           await ctx.reply(template.replace('{id}', expenseId));
         } else {
           const template =
             p.strings?.expenseNotFound ??
-            'Catatan pengeluaran #{id} tidak ditemukan.';
+            'Expense record #{id} not found.';
           await ctx.reply(template.replace('{id}', expenseId));
         }
       },
     },
     {
       name: 'exportcsv',
-      description: 'Unduh seluruh riwayat pengeluaran dalam format file CSV',
+      description: 'Download full expense history as CSV file',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -181,19 +181,19 @@ export default {
 
         // Jika hanya ada 1 baris header, berarti belum ada data
         if (!csvContent.includes('\n')) {
-          await ctx.reply('Belum ada riwayat pengeluaran untuk diekspor.');
+          await ctx.reply('No expense history available to export.');
           return;
         }
 
         try {
           const fileBuffer = Buffer.from(csvContent, 'utf-8');
-          const fileName = `pengeluaran_${userId}.csv`;
+          const fileName = `expenses_${userId}.csv`;
           await ctx.replyWithDocument(new InputFile(fileBuffer, fileName), {
-            caption: 'Berikut file rekap pengeluaran kamu (format CSV).',
+            caption: 'Here is your expense report (CSV format).',
           });
         } catch (err) {
-          console.error('Gagal mengirim file CSV pengeluaran:', err);
-          await ctx.reply('[Error] Gagal membuat file CSV pengeluaran saat ini.');
+          console.error('Failed to send CSV file:', err);
+          await ctx.reply('[Error] Failed to generate expense CSV file.');
         }
       },
     },
@@ -213,14 +213,14 @@ export default {
         const userId = ctx.from?.id;
 
         if (action !== 'cat' || isNaN(expenseId) || !userId) {
-          await ctx.answerCallbackQuery({ text: 'Data tombol tidak valid.' });
+          await ctx.answerCallbackQuery({ text: 'Invalid button data.' });
           return;
         }
 
         const existing = getExpenseById(expenseId, userId);
         if (!existing) {
           await ctx.answerCallbackQuery({
-            text: 'Catatan pengeluaran tidak ditemukan.',
+            text: 'Expense record not found.',
           });
           return;
         }
@@ -230,22 +230,22 @@ export default {
           const catLabel = CATEGORY_LABELS[newCat] || newCat;
 
           await ctx.answerCallbackQuery({
-            text: `Kategori diubah jadi: ${catLabel}`,
+            text: `Category changed to: ${catLabel}`,
           });
 
           const template =
             p.strings?.expenseCategoryUpdated ??
-            'Kategori pengeluaran #{id} berhasil diubah jadi *{category}*.';
+            'Expense #{id} category changed to *{category}*.';
           const updateText = template
             .replace('{id}', expenseId)
             .replace('{category}', catLabel);
 
           const fullMsg =
-            `*Pengeluaran Diperbarui!*\n` +
+            `*Expense Updated!*\n` +
             `• ID: #${existing.id}\n` +
-            `• Nominal: *${formatRupiah(existing.amount)}*\n` +
-            `• Kategori: *${catLabel}*\n` +
-            `• Keterangan: "${existing.note}"\n\n` +
+            `• Amount: *${formatRupiah(existing.amount)}*\n` +
+            `• Category: *${catLabel}*\n` +
+            `• Note: "${existing.note}"\n\n` +
             `_${updateText}_`;
 
           await ctx.editMessageText(fullMsg, {
@@ -263,11 +263,11 @@ export default {
     {
       name: 'EXPENSE',
       promptHint:
-        'Catat pengeluaran uang user. Format: [EXPENSE: nominal | kategori | keterangan]. Contoh: [EXPENSE: 25000 | makanan | nasi padang], [EXPENSE: 50000 | transport | bensin]. Pilihan kategori: makanan, transport, belanja, tagihan, hiburan, kesehatan, lainnya. Gunakan tag ini jika user mengabarkan baru saja membeli sesuatu atau mengeluarkan uang.',
+        'Record user expense. Format: [EXPENSE: amount | category | note]. Example: [EXPENSE: 25000 | makanan | lunch], [EXPENSE: 50000 | transport | gas]. Category options: makanan, transport, belanja, tagihan, hiburan, kesehatan, lainnya. Use this tag when user spent money.',
       handle: async (ctx, args) => {
         const rawAmount = args?.[0]?.trim();
         const rawCategory = args?.[1]?.trim()?.toLowerCase();
-        const rawNote = args?.[2]?.trim() || 'Pengeluaran';
+        const rawNote = args?.[2]?.trim() || 'Expense';
         const userId = ctx.from?.id;
 
         if (!rawAmount || !userId) return;
@@ -284,10 +284,10 @@ export default {
           const catLabel = CATEGORY_LABELS[exp.category] || exp.category;
           const template =
             p.strings?.expenseRecorded ??
-            '*Pengeluaran Dicatat!*\n' +
-              '• Nominal: *{amount}*\n' +
-              '• Kategori: *{category}*\n' +
-              '• Keterangan: "{note}"';
+            '*Expense Recorded!*\n' +
+              '• Amount: *{amount}*\n' +
+              '• Category: *{category}*\n' +
+              '• Note: "{note}"';
 
           const replyText = template
             .replace('{amount}', formatRupiah(exp.amount))
@@ -299,7 +299,7 @@ export default {
             reply_markup: buildCategoryKeyboard(exp.id),
           });
         } catch (err) {
-          console.error('Gagal memproses tag [EXPENSE]:', err.message);
+          console.error('Failed to process tag [EXPENSE]:', err.message);
         }
       },
     },

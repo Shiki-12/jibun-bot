@@ -151,7 +151,7 @@ describe('To-Do List Feature (F-11)', () => {
     // 2. Jika ada lebih dari satu kecocokan (misal "Beli")
     insertTodo({ userId: tagUser, text: 'Beli jeruk manis' });
     await doneTag.handle(ctx, ['Beli']);
-    assert.ok(replyMsg.includes('Ada beberapa to-do yang cocok'));
+    assert.ok(replyMsg.includes('Multiple to-do items matched'));
     assert.ok(replyMsg.includes('/done'));
   });
 

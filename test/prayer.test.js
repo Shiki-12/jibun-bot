@@ -205,14 +205,14 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
         tz: 'Asia/Jakarta',
       });
 
-      assert.ok(output.includes('Jadwal Sholat untuk Jakarta'));
-      assert.ok(output.includes('*Subuh:* `04:05` WIB'));
-      assert.ok(output.includes('*Dzuhur:* `11:36` WIB'));
-      assert.ok(output.includes('*Ashar:* `14:55` WIB'));
+      assert.ok(output.includes('Prayer Schedule for Jakarta'));
+      assert.ok(output.includes('*Fajr (Subuh):* `04:05` WIB'));
+      assert.ok(output.includes('*Dhuhr (Dzuhur):* `11:36` WIB'));
+      assert.ok(output.includes('*Asr (Ashar):* `14:55` WIB'));
       assert.ok(output.includes('*Maghrib:* `17:47` WIB'));
-      assert.ok(output.includes('*Isya:* `18:59` WIB'));
+      assert.ok(output.includes('*Isha (Isya):* `18:59` WIB'));
       assert.ok(output.includes('*Imsak:* `03:55` WIB'));
-      assert.ok(output.includes('Metode: Kemenag RI'));
+      assert.ok(output.includes('Method: Ministry of Religious Affairs Indonesia'));
     });
   });
 
@@ -380,7 +380,7 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await sholatCmd.handler(ctx);
-      assert.ok(replyText.includes('belum mengatur kota domisili'));
+      assert.ok(replyText.includes('not set your home city'));
     });
 
     it('/sholat <kota> mengambil jadwal untuk kota yang diminta', async () => {
@@ -404,8 +404,8 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await sholatCmd.handler(ctx);
-      assert.ok(replyText.includes('Jadwal Sholat untuk Bandung'));
-      assert.ok(replyText.includes('*Subuh:* `04:05`'));
+      assert.ok(replyText.includes('Prayer Schedule for Bandung'));
+      assert.ok(replyText.includes('*Fajr (Subuh):* `04:05`'));
     });
 
     it('/adzan status menampilkan mati jika belum diatur', async () => {
@@ -421,7 +421,7 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await adzanCmd.handler(ctx);
-      assert.ok(replyText.includes('*Mati*'));
+      assert.ok(replyText.includes('*Off*'));
     });
 
     it('/adzan on meminta atur kota terlebih dahulu jika belum ada kota', async () => {
@@ -437,7 +437,7 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await adzanCmd.handler(ctx);
-      assert.ok(replyText.includes('Kota domisili belum diatur'));
+      assert.ok(replyText.includes('City has not been set'));
     });
 
     it('/adzan on berhasil mengaktifkan pengingat jika kota sudah diatur', async () => {
@@ -466,9 +466,9 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await adzanCmd.handler(ctx);
-      assert.ok(replyText.includes('berhasil diaktifkan'));
+      assert.ok(replyText.includes('enabled for'));
       assert.ok(replyText.includes('Jakarta'));
-      assert.ok(replyText.includes('15 menit'));
+      assert.ok(replyText.includes('15 minutes'));
 
       const user = db.prepare(`SELECT adzan, adzan_lead FROM users WHERE id = ?`).get(TEST_USER);
       assert.equal(user.adzan, 1);
@@ -495,7 +495,7 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await adzanCmd.handler(ctx);
-      assert.ok(replyText.includes('dimatikan'));
+      assert.ok(replyText.includes('disabled'));
 
       const user = db.prepare(`SELECT adzan FROM users WHERE id = ?`).get(TEST_USER);
       assert.equal(user.adzan, 0);
@@ -521,7 +521,7 @@ describe('F-41: Jadwal Sholat (Aladhan API & Adzan Reminders)', () => {
       };
 
       await prayerTag.handle(ctx, ['Medan']);
-      assert.ok(replyText.includes('Jadwal Sholat untuk Medan'));
+      assert.ok(replyText.includes('Prayer Schedule for Medan'));
     });
   });
 });

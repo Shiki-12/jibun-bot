@@ -11,7 +11,7 @@ export default {
   commands: [
     {
       name: 'proactive',
-      description: 'Atur bot untuk chat duluan saat kamu lama tidak aktif (on/off)',
+      description: 'Configure bot to reach out first when you are inactive (on/off)',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -24,7 +24,7 @@ export default {
           setProactiveEnabled(userId, 1);
           const msg =
             ctx.persona?.strings?.proactiveEnabled ??
-            'Chat proaktif diaktifkan! Kalau kamu lama nggak muncul, aku bakal nyapa duluan. B-bukan berarti aku kesepian ya! ( `_´ )';
+            'Proactive chat enabled! If you disappear for too long, I will check in on you. Not that I was lonely or anything! ( `_´ )';
           await ctx.reply(msg);
           return;
         }
@@ -33,29 +33,29 @@ export default {
           setProactiveEnabled(userId, 0);
           const msg =
             ctx.persona?.strings?.proactiveDisabled ??
-            'Chat proaktif dimatikan. Terserah deh, aku nggak bakal nyapa duluan lagi! (¬_¬)';
+            'Proactive chat disabled. Fine then, I will not reach out first anymore! (¬_¬)';
           await ctx.reply(msg);
           return;
         }
 
         // Tampilkan status terkini
         const s = getProactiveSettings(userId);
-        const statusStr = s.enabled ? '*Aktif*' : '*Nonaktif*';
+        const statusStr = s.enabled ? '*Active*' : '*Disabled*';
         const unrepliedNote =
           s.unreplied_count >= 3
-            ? '\n_Bot sedang berhenti chat duluan karena 3 pesan belum kamu balas. Kirim pesan apa saja untuk mengaktifkannya kembali._'
+            ? '\n_Bot is currently paused from checking in because 3 messages are unanswered. Send any message to resume._'
             : '';
 
         const replyText =
-          `*Pengaturan Chat Proaktif*\n\n` +
+          `*Proactive Chat Settings*\n\n` +
           `• Status: ${statusStr}\n` +
-          `• Jam Tenang: \`${s.quiet_start}\` s.d. \`${s.quiet_end}\`\n` +
-          `• Minimal Tidak Aktif: *${s.min_idle_hours} jam*\n` +
-          `• Pesan Belum Dibalas: *${s.unreplied_count}/3*${unrepliedNote}\n\n` +
-          `_Perintah:_\n` +
-          `• \`/proactive on\` — Aktifkan chat duluan\n` +
-          `• \`/proactive off\` — Matikan chat duluan\n` +
-          `• \`/quiet 22:00-07:00\` — Atur jam tenang`;
+          `• Quiet Hours: \`${s.quiet_start}\` to \`${s.quiet_end}\`\n` +
+          `• Minimum Inactivity: *${s.min_idle_hours} hours*\n` +
+          `• Unanswered Messages: *${s.unreplied_count}/3*${unrepliedNote}\n\n` +
+          `_Commands:_\n` +
+          `• \`/proactive on\` — Enable proactive check-ins\n` +
+          `• \`/proactive off\` — Disable proactive check-ins\n` +
+          `• \`/quiet 22:00-07:00\` — Set quiet hours`;
 
         await ctx.reply(replyText, { parse_mode: 'Markdown' });
       },
@@ -63,7 +63,7 @@ export default {
 
     {
       name: 'quiet',
-      description: 'Atur rentang jam tenang (misal: /quiet 22:00-07:00)',
+      description: 'Set quiet hours range (example: /quiet 22:00-07:00)',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -74,7 +74,7 @@ export default {
         if (!rawArg) {
           const s = getProactiveSettings(userId);
           await ctx.reply(
-            `Jam tenang saat ini: \`${s.quiet_start}\` s.d. \`${s.quiet_end}\`.\n\nUntuk mengubah, gunakan format: \`/quiet 22:00-07:00\``,
+            `Current quiet hours: \`${s.quiet_start}\` to \`${s.quiet_end}\`.\n\nTo change, use format: \`/quiet 22:00-07:00\``,
             { parse_mode: 'Markdown' },
           );
           return;
@@ -84,7 +84,7 @@ export default {
         if (!parsed) {
           const invalidMsg =
             ctx.persona?.strings?.quietHoursInvalid ??
-            'Format jam tenang salah! Gunakan format HH:mm-HH:mm, contoh: /quiet 22:00-07:00';
+            'Invalid quiet hours format! Use format HH:mm-HH:mm, example: /quiet 22:00-07:00';
           await ctx.reply(invalidMsg);
           return;
         }
@@ -95,7 +95,7 @@ export default {
           ctx.persona?.strings?.quietHoursSet
             ?.replace('{start}', parsed.quietStart)
             ?.replace('{end}', parsed.quietEnd) ??
-          `Jam tenang berhasil diatur ke *${parsed.quietStart}* s.d. *${parsed.quietEnd}*. Bot tidak akan mengirim sapaan di jam tersebut.`;
+          `Quiet hours set to *${parsed.quietStart}* to *${parsed.quietEnd}*. Bot will not send greetings during this period.`;
 
         await ctx.reply(successMsg, { parse_mode: 'Markdown' });
       },

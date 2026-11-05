@@ -199,7 +199,7 @@ test('F-50: Fitur Grup (Group Management, Rangkum, Chatty & Welcome)', async (t)
       },
     };
     await cmd.handler(privateCtx);
-    assert.match(replyMsg, /khusus|hanya dapat digunakan di dalam grup/i);
+    assert.match(replyMsg, /only for group chats|group chat/i);
 
     // 2. Diberi tahu jika pesan kurang dari 3
     const emptyGroupId = -1009990001;
@@ -213,7 +213,7 @@ test('F-50: Fitur Grup (Group Management, Rangkum, Chatty & Welcome)', async (t)
       },
     };
     await cmd.handler(notEnoughCtx);
-    assert.match(notEnoughMsg, /Belum cukup riwayat pesan/);
+    assert.match(notEnoughMsg, /Not enough message history/i);
 
     // 3. Berhasil merangkum jika pesan cukup
     const activeGroupId = -1009990002;
@@ -241,7 +241,7 @@ test('F-50: Fitur Grup (Group Management, Rangkum, Chatty & Welcome)', async (t)
       },
     };
     await cmd.handler(successCtx);
-    assert.match(successMsg, /Ringkasan/i);
+    assert.match(successMsg, /Summary|Ringkasan/i);
   });
 
   await t.test('Perintah /chatty dan /welcome (Khusus Admin)', async () => {
@@ -275,7 +275,7 @@ test('F-50: Fitur Grup (Group Management, Rangkum, Chatty & Welcome)', async (t)
       },
     };
     await chattyCmd.handler(adminCtx);
-    assert.match(adminChattyMsg, /diaktifkan/i);
+    assert.match(adminChattyMsg, /enabled/i);
     assert.equal(getGroupSettings(groupId).chatty, 1);
 
     // 3. Admin mematikan /chatty off
@@ -385,7 +385,7 @@ test('F-50: Fitur Grup (Group Management, Rangkum, Chatty & Welcome)', async (t)
     await processPendingReminders(mockBot, now);
 
     assert.equal(sentChatId, groupId);
-    assert.match(sentText, /Pengingat untuk \[Rian\]\(tg:\/\/user\?id=888123\)/);
+    assert.match(sentText, /Reminder for \[Rian\]\(tg:\/\/user\?id=888123\)/);
     assert.match(sentText, /Rapat evaluasi mingguan/);
   });
 

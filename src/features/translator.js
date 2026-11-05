@@ -32,7 +32,7 @@ export default {
   commands: [
     {
       name: 'terjemah',
-      description: 'Terjemahkan teks ke bahasa lain (/terjemah <bahasa> <teks> atau balas pesan)',
+      description: 'Translate text to another language (/terjemah <language> <text> or reply to message)',
       handler: async (ctx) => {
         const rawArgs = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim() || '';
         const replyText =
@@ -44,17 +44,17 @@ export default {
 
         if (parsed.missingLang || (!parsed.text && !parsed.isReply)) {
           await ctx.reply(
-            'Format Perintah Terjemah:\n' +
-              '• /terjemah <bahasa> <teks>\n' +
-              '  Contoh: /terjemah en Selamat pagi, apa kabarmu?\n' +
-              '• Balas (reply) pesan dengan: /terjemah <bahasa>\n' +
-              '  Contoh reply: /terjemah en atau /terjemah jepang',
+            'Translation Command Format:\n' +
+              '• /terjemah <language> <text>\n' +
+              '  Example: /terjemah en Good morning, how are you?\n' +
+              '• Reply to a message with: /terjemah <language>\n' +
+              '  Example reply: /terjemah en or /terjemah japanese',
           );
           return;
         }
 
         if (!parsed.text) {
-          await ctx.reply('Harap sertakan teks yang ingin diterjemahkan atau balas pesan yang berisi teks!');
+          await ctx.reply('Please provide the text to translate or reply to a message containing text.');
           return;
         }
 
@@ -74,33 +74,33 @@ export default {
           const intro =
             typeof persona.strings?.translateIntro === 'function'
               ? persona.strings.translateIntro(res.targetLang)
-              : `Berikut hasil terjemahan ke ${res.targetLang}:`;
+              : `Here is the translation into ${res.targetLang}:`;
 
           await safeReply(ctx, sanitizeReply(`${intro}\n\n${res.translatedText}`));
         } catch (err) {
           if (err.message === 'URL_BLOCKED') {
             const blockedMsg =
               persona.strings?.translateUrlBlocked ||
-              'Tautan URL tidak dibuka otomatis demi keamanan (proteksi SSRF). Silakan salin dan tempel teksnya secara langsung ya!';
+              'URL links are not opened automatically for security (SSRF protection). Please copy and paste the text directly.';
             await ctx.reply(blockedMsg);
             return;
           }
 
           if (err.message === 'INVALID_LANGUAGE') {
             await ctx.reply(
-              `Bahasa target "${parsed.targetLang}" tidak dikenali. Contoh: "en", "id", "jepang", "korea", "arab", "mandarin", "jerman", dll.`,
+              `Target language "${parsed.targetLang}" is not recognized. Example: "en", "id", "japanese", "korean", "arabic", "chinese", "german", etc.`,
             );
             return;
           }
 
-          console.error('Error saat menerjemahkan:', err);
-          await ctx.reply(persona.errorMessage || 'Terjadi kesalahan saat menerjemahkan teks.');
+          console.error('Error translating text:', err);
+          await ctx.reply(persona.errorMessage || 'An error occurred while translating text.');
         }
       },
     },
     {
       name: 'rangkum',
-      description: 'Rangkum teks panjang atau pesan yang dibalas (/rangkum <teks> atau balas pesan)',
+      description: 'Summarize long text or replied message (/rangkum <text> or reply to message)',
       handler: async (ctx) => {
         const rawArgs = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim() || '';
         const replyText =
@@ -112,9 +112,9 @@ export default {
 
         if (!parsed.text) {
           await ctx.reply(
-            'Format Perintah Rangkum:\n' +
-              '• /rangkum <teks panjang>\n' +
-              '• Balas (reply) pesan panjang dengan /rangkum',
+            'Summary Command Format:\n' +
+              '• /rangkum <long text>\n' +
+              '• Reply to a long message with /rangkum',
           );
           return;
         }
@@ -131,25 +131,25 @@ export default {
 
           const intro =
             persona.strings?.summarizeIntro ||
-            'Berikut ringkasan poin-poin pentingnya:';
+            'Here is the summary of key points:';
 
           await safeReply(ctx, sanitizeReply(`${intro}\n\n${res.summaryText}`));
         } catch (err) {
           if (err.message === 'URL_BLOCKED') {
             const blockedMsg =
               persona.strings?.summarizeUrlBlocked ||
-              'Tautan URL tidak diambil secara otomatis demi keamanan (proteksi SSRF). Silakan salin dan tempel teks artikelnya ke sini ya!';
+              'URL links are not fetched automatically for security (SSRF protection). Please copy and paste the article text here.';
             await ctx.reply(blockedMsg);
             return;
           }
 
           if (err.message === 'TEXT_TOO_SHORT') {
-            await ctx.reply('Teks terlalu pendek untuk dirangkum! Berikan teks artikel atau paragraf yang lebih panjang ya.');
+            await ctx.reply('Text is too short to summarize. Please provide a longer article or paragraph.');
             return;
           }
 
-          console.error('Error saat merangkum:', err);
-          await ctx.reply(persona.errorMessage || 'Terjadi kesalahan saat merangkum teks.');
+          console.error('Error summarizing text:', err);
+          await ctx.reply(persona.errorMessage || 'An error occurred while summarizing text.');
         }
       },
     },
@@ -159,7 +159,7 @@ export default {
     {
       name: 'TRANSLATE',
       promptHint:
-        'Terjemahkan teks ke bahasa target. Format: [TRANSLATE: bahasa_tujuan | teks]. Contoh: [TRANSLATE: en | Selamat pagi]. Keluarkan tag ini jika user meminta bantuan terjemahan.',
+        'Translate text into target language. Format: [TRANSLATE: target_language | text]. Example: [TRANSLATE: en | Good morning]. Emit this tag when user asks for translation help.',
       handle: async (ctx, args) => {
         if (!args || args.length < 2) return;
         const targetLang = args[0]?.trim();
@@ -174,18 +174,18 @@ export default {
           const intro =
             typeof persona.strings?.translateIntro === 'function'
               ? persona.strings.translateIntro(res.targetLang)
-              : `Berikut hasil terjemahan ke ${res.targetLang}:`;
+              : `Here is the translation into ${res.targetLang}:`;
 
           await safeReply(ctx, sanitizeReply(`${intro}\n\n${res.translatedText}`));
         } catch (err) {
-          console.error(`Gagal memproses tag [TRANSLATE]:`, err.message);
+          console.error(`Failed processing [TRANSLATE] tag:`, err.message);
         }
       },
     },
     {
       name: 'SUMMARIZE',
       promptHint:
-        'Rangkum teks panjang menjadi poin-poin ringkas. Format: [SUMMARIZE: teks]. Contoh: [SUMMARIZE: teks artikel panjang]. Keluarkan tag ini jika user meminta merangkum teks.',
+        'Summarize long text into concise key points. Format: [SUMMARIZE: text]. Example: [SUMMARIZE: long article text]. Emit this tag when user asks to summarize text.',
       handle: async (ctx, args) => {
         if (!args || args.length < 1) return;
         const text = args.join(' | ').trim();
@@ -198,11 +198,11 @@ export default {
           const res = await summarizeText({ text });
           const intro =
             persona.strings?.summarizeIntro ||
-            'Berikut ringkasan poin-poin pentingnya:';
+            'Here is the summary of key points:';
 
           await safeReply(ctx, sanitizeReply(`${intro}\n\n${res.summaryText}`));
         } catch (err) {
-          console.error(`Gagal memproses tag [SUMMARIZE]:`, err.message);
+          console.error(`Failed processing [SUMMARIZE] tag:`, err.message);
         }
       },
     },

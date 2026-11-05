@@ -127,11 +127,11 @@ export async function getPrayerData(
 }
 
 /**
- * Format tampilan jadwal sholat lengkap hari ini secara netral dan hormat.
+ * Format complete prayer schedule for today in a respectful, neutral tone.
  */
 export function formatPrayerSchedule({ prayerData, cityName = null, tz = 'Asia/Jakarta' }) {
   if (!prayerData || !prayerData.timings) {
-    return 'Data jadwal sholat tidak tersedia.';
+    return 'Prayer schedule data is not available.';
   }
 
   const city = cityName || prayerData.city;
@@ -142,22 +142,22 @@ export function formatPrayerSchedule({ prayerData, cityName = null, tz = 'Asia/J
   if (prayerData.date?.hijri) {
     const h = prayerData.date.hijri;
     const monthName = h.month?.en || h.month?.ar || '';
-    hijriStr = ` (${h.day} ${monthName} ${h.year} H)`;
+    hijriStr = ` (${h.day} ${monthName} ${h.year} AH)`;
   }
 
-  const gregorianStr = prayerData.date?.readable || 'Hari ini';
+  const gregorianStr = prayerData.date?.readable || 'Today';
 
   return (
-    `*Jadwal Sholat untuk ${city}*\n` +
+    `*Prayer Schedule for ${city}*\n` +
     `*${gregorianStr}*${hijriStr}\n\n` +
     `• *Imsak:* \`${t.Imsak}\` ${tzLabel}\n` +
-    `• *Subuh:* \`${t.Fajr}\` ${tzLabel}\n` +
-    `• *Terbit:* \`${t.Sunrise}\` ${tzLabel}\n` +
-    `• *Dzuhur:* \`${t.Dhuhr}\` ${tzLabel}\n` +
-    `• *Ashar:* \`${t.Asr}\` ${tzLabel}\n` +
+    `• *Fajr (Subuh):* \`${t.Fajr}\` ${tzLabel}\n` +
+    `• *Sunrise:* \`${t.Sunrise}\` ${tzLabel}\n` +
+    `• *Dhuhr (Dzuhur):* \`${t.Dhuhr}\` ${tzLabel}\n` +
+    `• *Asr (Ashar):* \`${t.Asr}\` ${tzLabel}\n` +
     `• *Maghrib:* \`${t.Maghrib}\` ${tzLabel}\n` +
-    `• *Isya:* \`${t.Isha}\` ${tzLabel}\n\n` +
-    `_Metode: Kemenag RI (Kementerian Agama Republik Indonesia)_`
+    `• *Isha (Isya):* \`${t.Isha}\` ${tzLabel}\n\n` +
+    `_Method: Ministry of Religious Affairs Indonesia (Kemenag RI)_`
   );
 }
 

@@ -292,7 +292,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
 
       assert.equal(count, 1);
       assert.equal(messagesSent.length, 1);
-      assert.ok(messagesSent[0].text.includes('Pengingat Kebiasaan'));
+      assert.ok(messagesSent[0].text.includes('Habit Reminder'));
       assert.ok(messagesSent[0].text.includes('Minum suplemen'));
       assert.ok(messagesSent[0].options.reply_markup);
 
@@ -349,7 +349,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await habitsCmd.handler(ctx);
-      assert.ok(replyText.includes('belum memiliki daftar kebiasaan'));
+      assert.ok(replyText.includes('do not have any daily habits'));
     });
 
     it('/habit add membuat kebiasaan baru', async () => {
@@ -364,7 +364,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await habitCmd.handler(ctx);
-      assert.ok(replyText.includes('Kebiasaan baru dicatat'));
+      assert.ok(replyText.includes('New habit recorded'));
       assert.ok(replyText.includes('Jalan kaki 30 menit'));
       assert.ok(replyText.includes('06:30'));
     });
@@ -401,7 +401,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await habitCmd.handler(ctx);
-      assert.ok(replyText.includes('dilewati'));
+      assert.ok(replyText.includes('skipped'));
     });
 
     it('/delhabit menghapus kebiasaan', async () => {
@@ -418,7 +418,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await delCmd.handler(ctx);
-      assert.ok(replyText.includes('berhasil dihapus'));
+      assert.ok(replyText.includes('deleted'));
       assert.equal(getHabitById(habit.id), null);
     });
 
@@ -441,7 +441,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await callbackDef.handler(ctx);
-      assert.ok(answered.includes('Streak: 1 hari'));
+      assert.ok(answered.includes('Streak: 1 days') || answered.includes('Streak: 1 day'));
       assert.ok(editedText.includes('Tombol habit'));
     });
 
@@ -475,7 +475,7 @@ describe('F-44: Habit Tracker dan Streak Harian', () => {
       };
 
       await logTag.handle(ctxLog, [String(habitId), 'done']);
-      assert.ok(replyLog.includes('selesai hari ini'));
+      assert.ok(replyLog.includes('completed today'));
     });
   });
 });

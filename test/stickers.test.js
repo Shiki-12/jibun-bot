@@ -209,7 +209,7 @@ describe('F-21: Stiker Reaksi & Koleksi Bot', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Pilihan mood'));
+      assert.ok(replies[0].includes('mood options'));
       assert.ok(replies[0].includes('senang'));
     });
 
@@ -225,7 +225,7 @@ describe('F-21: Stiker Reaksi & Koleksi Bot', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('dibatalkan'));
+      assert.ok(replies[0].includes('cancelled'));
       assert.equal(getAdminAddStickerMode(ADMIN_USER_ID), null);
     });
 
@@ -241,7 +241,7 @@ describe('F-21: Stiker Reaksi & Koleksi Bot', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Koleksi Stiker Reaksi'));
+      assert.ok(replies[0].text.includes('Reaction Sticker Collection'));
       assert.ok(replies[0].text.includes('kesal'));
     });
 
@@ -268,7 +268,7 @@ describe('F-21: Stiker Reaksi & Koleksi Bot', () => {
         reply: async (text) => adminReplies.push(text),
       };
       await cmd.handler(adminCtx);
-      assert.ok(adminReplies[0].includes('berhasil dihapus'));
+      assert.ok(adminReplies[0].includes('deleted'));
       assert.equal(getStickerById(added.id), null);
     });
   });
@@ -326,7 +326,7 @@ describe('F-21: Stiker Reaksi & Koleksi Bot', () => {
 
       assert.ok(prompt.includes('[STICKER: ...]'));
       assert.ok(prompt.includes('[GIF: ...]'));
-      assert.ok(prompt.includes('JANGAN pernah mengeluarkan tag [GIF: ...] dan [STICKER: ...] secara bersamaan'));
+      assert.ok(prompt.includes('NEVER output [GIF: ...] and [STICKER: ...] together'));
     });
   });
 });

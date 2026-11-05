@@ -13,7 +13,7 @@ export default {
   commands: [
     {
       name: 'export',
-      description: 'Unduh seluruh data pribadi yang tersimpan di bot (format JSON)',
+      description: 'Download all personal data stored in the bot (JSON format)',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -33,20 +33,20 @@ export default {
 
           const caption =
             persona.strings?.exportDone ??
-            'Berikut seluruh salinan data pribadimu (format JSON).';
+            'Here is a copy of all your personal data (JSON format).';
 
           await ctx.replyWithDocument(new InputFile(fileBuffer, fileName), {
             caption,
           });
         } catch (err) {
-          console.error('Gagal mengekspor data user:', err);
-          await ctx.reply('Gagal mengekspor data saat ini.');
+          console.error('Failed to export user data:', err);
+          await ctx.reply('Failed to export data at this time.');
         }
       },
     },
     {
       name: 'deleteme',
-      description: 'Hapus seluruh data pribadi secara permanen (konfirmasi dua langkah)',
+      description: 'Permanently delete all personal data (two-step confirmation)',
       handler: async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
@@ -56,17 +56,17 @@ export default {
 
         const warningTemplate =
           persona.strings?.deleteWarning ??
-          '*Peringatan Penghapusan Data Permanen!*\n\n' +
-            'Tindakan ini akan menghapus SELURUH data pribadimu dari bot:\n' +
-            '• Catatan, to-do list, dan pengingat\n' +
-            '• Catatan pengeluaran & jurnal mood\n' +
-            '• Kebiasaan (habits), fakta ingatan AI, poin affinity & skor game\n' +
-            '• Profil dan preferensi akun\n\n' +
-            '_Data yang sudah dihapus TIDAK DAPAT dipulihkan. Apakah kamu yakin?_';
+          '*Permanent Data Deletion Warning!*\n\n' +
+            'This action will permanently delete ALL your personal data from the bot:\n' +
+            '• Notes, to-do list, and reminders\n' +
+            '• Expense records & mood journal\n' +
+            '• Habits, AI memory facts, affinity points & game scores\n' +
+            '• Profile and account preferences\n\n' +
+            '_Deleted data CANNOT be recovered. Are you sure?_';
 
         const keyboard = new InlineKeyboard()
-          .text('Ya, Hapus Semua Dataku', `delme:confirm:${userId}`)
-          .text('Batal', `delme:cancel:${userId}`);
+          .text('Yes, Delete All My Data', `delme:confirm:${userId}`)
+          .text('Cancel', `delme:cancel:${userId}`);
 
         await ctx.reply(warningTemplate, {
           parse_mode: 'Markdown',
@@ -76,7 +76,7 @@ export default {
     },
     {
       name: 'privacy',
-      description: 'Lihat kebijakan privasi dan pengelolaan data pengguna',
+      description: 'View privacy policy and data management guidelines',
       handler: async (ctx) => {
         const text = getPrivacyPolicyText();
         await ctx.reply(text, { parse_mode: 'Markdown' });
@@ -93,7 +93,7 @@ export default {
 
         if (!userId || userId !== targetId) {
           await ctx.answerCallbackQuery({
-            text: 'Aksi ini hanya dapat dikonfirmasi oleh pemilik akun.',
+            text: 'This action can only be confirmed by the account owner.',
             show_alert: true,
           }).catch(() => {});
           return;
@@ -105,16 +105,16 @@ export default {
         try {
           deleteUserData(userId);
 
-          await ctx.answerCallbackQuery({ text: 'Data berhasil dihapus.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Data successfully deleted.' }).catch(() => {});
 
           const successMsg =
             persona.strings?.deleteSuccess ??
-            '*Seluruh data pribadimu telah berhasil dihapus secara permanen.*';
+            '*All your personal data has been permanently deleted.*';
 
           await ctx.editMessageText(successMsg, { parse_mode: 'Markdown' }).catch(() => {});
         } catch (err) {
-          console.error('Gagal menghapus data user:', err);
-          await ctx.answerCallbackQuery({ text: 'Terjadi kesalahan saat menghapus data.' }).catch(() => {});
+          console.error('Failed to delete user data:', err);
+          await ctx.answerCallbackQuery({ text: 'An error occurred while deleting data.' }).catch(() => {});
         }
       },
     },
@@ -126,7 +126,7 @@ export default {
 
         if (!userId || userId !== targetId) {
           await ctx.answerCallbackQuery({
-            text: 'Aksi ini hanya dapat dibatalkan oleh pemilik akun.',
+            text: 'This action can only be cancelled by the account owner.',
             show_alert: true,
           }).catch(() => {});
           return;
@@ -135,11 +135,11 @@ export default {
         const personaId = getSetting(ctx, 'persona') || 'tsundere';
         const persona = getPersonality(personaId, ctx);
 
-        await ctx.answerCallbackQuery({ text: 'Dibatalkan.' }).catch(() => {});
+        await ctx.answerCallbackQuery({ text: 'Cancelled.' }).catch(() => {});
 
         const cancelMsg =
           persona.strings?.deleteCancelled ??
-          '*Penghapusan data telah dibatalkan.* Datamu tetap aman.';
+          '*Data deletion cancelled.* Your data remains safe.';
 
         await ctx.editMessageText(cancelMsg, { parse_mode: 'Markdown' }).catch(() => {});
       },

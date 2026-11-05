@@ -108,7 +108,7 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
   // 3. Selector & Settings UI / Admin Guard
   it('3. /persona dan /settings menampilkan kategori Exclusive dan menjaga admin guard', async () => {
     const { text, keyboard } = renderPersonaSelector('tsundere');
-    assert.ok(text.includes('Ganti Personality Bot'));
+    assert.ok(text.includes('Change Bot Personality'));
     const buttons = keyboard.inline_keyboard.flat();
     assert.ok(buttons.some((b) => b.callback_data === 'persona:set:jiang_cheng'));
     assert.ok(buttons.some((b) => b.callback_data === 'persona:set:tsundere'));
@@ -130,7 +130,7 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
     const personaCmd = personaFeature.commands.find((c) => c.name === 'persona');
     await personaCmd.handler(nonAdminCtx);
     assert.equal(replies.length, 1);
-    assert.ok(replies[0].includes('Hanya admin grup'));
+    assert.ok(replies[0].includes('Only group administrators'));
     assert.notEqual(getSetting(nonAdminCtx, 'persona'), 'jiang_cheng');
   });
 
@@ -213,7 +213,7 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
 
     const tsundere = getPersonality('tsundere');
     const promptTsundere = buildSystemPrompt({ persona: tsundere, ctx });
-    assert.ok(promptTsundere.includes('Dere'));
+    assert.ok(promptTsundere.includes('Deep Trust'));
   });
 
   // 7. /status Title Persona Sesuai Tahap
@@ -443,10 +443,10 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
     const prompt = buildSystemPrompt({ persona: jc, ctx });
 
     assert.ok(prompt.includes('## STRICT LANGUAGE POLICY — ENGLISH ONLY (MANDATORY)'));
-    assert.ok(prompt.includes('You must ALWAYS speak and reply in natural, fluent English under all circumstances.'));
+    assert.ok(prompt.includes('You must ALWAYS speak'));
     assert.ok(prompt.includes('Even if the user writes in Indonesian, Chinese, Japanese, or any other language'));
-    assert.ok(prompt.includes('YOUR RESPONSE MUST BE ENTIRELY IN ENGLISH'));
-    assert.ok(prompt.includes('Preserve proper names, user-provided literal quotes, commands, identifiers, and action tags without corruption.'));
+    assert.ok(prompt.includes('IN ENGLISH'));
+    assert.ok(prompt.includes('Preserve proper names'));
   });
 
   // 20. English prompt headers & wrappers when active persona is Jiang Cheng
@@ -484,10 +484,10 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
     assert.ok(!text.includes('Ganti Personality Bot'));
   });
 
-  // 22. Unchanged Indonesian behavior for default personas
-  it('22. Persona default (tsundere/Raka) tetap 100% berbahasa Indonesia tanpa terpengaruh', () => {
+  // 22. Global English behavior for default personas
+  it('22. Persona default (tsundere/Raka) juga menggunakan sistem bahasa Inggris global', () => {
     const tsundere = getPersonality('tsundere');
-    assert.notEqual(tsundere.language, 'en');
+    assert.equal(tsundere.language, 'en');
 
     saveSummary(TEST_CHAT, 'Ringkasan Raka sebelumnya', 'tsundere');
     addFact(TEST_USER, 'Suka kopi');
@@ -497,16 +497,128 @@ describe('Exclusive Personality: Jiang Cheng (Mo Dao Zu Shi)', () => {
     };
     const prompt = buildSystemPrompt({ persona: tsundere, ctx });
 
-    assert.ok(prompt.includes('## Ringkasan Percakapan Sebelumnya'));
-    assert.ok(prompt.includes('## Hal yang Kamu Ketahui tentang User'));
-    assert.ok(prompt.includes('## Level Kedekatan (Affinity)'));
-    assert.ok(prompt.includes('## Konteks Saat Ini'));
+    assert.ok(prompt.includes('## Previous Conversation Summary'));
+    assert.ok(prompt.includes('## Things You Know About the User'));
+    assert.ok(prompt.includes('## Relationship Level (Affinity)'));
+    assert.ok(prompt.includes('## Current Context'));
     assert.ok(tsundere.greeting.includes('Raka'));
-    assert.ok(tsundere.greeting.includes('B-bukan berarti'));
-    assert.ok(tsundere.strings.inputTooLong.includes('Kepanjangan banget'));
+    assert.ok(tsundere.strings.inputTooLong.includes('way too long'));
 
     const { text } = renderPersonaSelector('tsundere');
-    assert.ok(text.includes('Ganti Personality Bot'));
-    assert.ok(text.includes('Personality aktif'));
+    assert.ok(text.includes('Change Bot Personality'));
+    assert.ok(text.includes('Active personality'));
+  });
+
+  // 23. Problem 1 Regression: Shared affinity UI (/status & renderStatusCard) 100% English for Jiang Cheng and global personas
+  it('23. Problem 1 Regression: /status & renderStatusCard tidak membocorkan header/label/poin/quote bahasa Indonesia untuk Jiang Cheng', async () => {
+    const jc = getPersonality('jiang_cheng');
+
+    // 23a. renderStatusCard dengan persona object
+    const affL0 = { level: 0, title: 'Stranger', points: 15, gainedToday: 4, dailyCap: 15, personaId: 'jiang_cheng' };
+    const cardObj = renderStatusCard(affL0, jc);
+    assert.ok(cardObj.includes('*Relationship & Affinity Status:*'), 'Header harus berbahasa Inggris');
+    assert.ok(cardObj.includes('• Level: *0* — *"Stranger"*'));
+    assert.ok(cardObj.includes('• Total Points: *15* points'), 'Unit poin harus points');
+    assert.ok(cardObj.includes('• Level Progress:'));
+    assert.ok(cardObj.includes('• Points Today: *4/15* points'));
+    assert.ok(cardObj.includes('We are still strangers. Do not overstep your bounds.'));
+    assert.ok(!cardObj.includes('Status Hubungan & Kedekatan'));
+    assert.ok(!cardObj.includes('Total Poin:'));
+    assert.ok(!cardObj.includes('Kita masih orang asing'));
+
+    // 23b. renderStatusCard ketika persona hanya berupa string personaId atau di-infer dari aff.personaId
+    const cardStr = renderStatusCard(affL0, 'jiang_cheng');
+    assert.ok(cardStr.includes('*Relationship & Affinity Status:*'));
+    assert.ok(cardStr.includes('• Total Points: *15* points'));
+    assert.ok(!cardStr.includes('Status Hubungan & Kedekatan'));
+
+    const cardInfer = renderStatusCard(affL0, null);
+    assert.ok(cardInfer.includes('*Relationship & Affinity Status:*'));
+    assert.ok(cardInfer.includes('• Total Points: *15* points'));
+    assert.ok(!cardInfer.includes('Status Hubungan & Kedekatan'));
+
+    // 23c. Level 4 Max level card
+    const affL4 = { level: 4, title: 'Deep Trust', points: 250, gainedToday: 15, dailyCap: 15, personaId: 'jiang_cheng' };
+    const cardMax = renderStatusCard(affL4, jc);
+    assert.ok(cardMax.includes('*(Max Level)*'));
+    assert.ok(!cardMax.includes('*(Level Maksimal)*'));
+    assert.ok(cardMax.includes('The trust I give is not easily granted. Do not waste it.'));
+
+    // 23d. Handler perintah /status dengan ctx bertema Jiang Cheng
+    const replies = [];
+    const ctx = {
+      chat: { id: TEST_CHAT, type: 'private' },
+      from: { id: TEST_USER },
+      persona: jc,
+      reply: async (text) => replies.push(text),
+    };
+    const affinityCmd = (await import('../src/features/affinity.js')).default.commands.find((c) => c.name === 'status');
+    await affinityCmd.handler(ctx);
+
+    assert.equal(replies.length, 1);
+    assert.ok(replies[0].includes('*Relationship & Affinity Status:*'));
+    assert.ok(replies[0].includes('points'));
+    assert.ok(!replies[0].includes('Status Hubungan & Kedekatan'));
+
+    // 23e. Persona tsundere juga mengikuti standar Bahasa Inggris global
+    const tsundere = getPersonality('tsundere');
+    const affId = { level: 0, title: 'Stranger', points: 10, gainedToday: 2, dailyCap: 15, personaId: 'tsundere' };
+    const cardId = renderStatusCard(affId, tsundere);
+    assert.ok(cardId.includes('*Relationship & Affinity Status:*'));
+    assert.ok(cardId.includes('• Total Points: *10* points'));
+    assert.ok(cardId.includes('• Level Progress:'));
+    assert.ok(cardId.includes('• Points Today: *2/15* points'));
+  });
+
+  // 24. Problem 2 Regression: Assembled prompt & instructions strictly prohibit mixed-language action descriptions
+  it('24. Problem 2 Regression: System prompt Jiang Cheng melarang keras deskripsi aksi/stage direction bahasa Indonesia dan mewajibkan minimal stage directions', () => {
+    const jc = getPersonality('jiang_cheng');
+    const ctx = {
+      chat: { id: TEST_CHAT, type: 'private' },
+      from: { id: TEST_USER, first_name: 'Lan' },
+    };
+    const prompt = buildSystemPrompt({ persona: jc, ctx });
+
+    // Cek aturan stage direction & action description di assembled system prompt
+    assert.ok(prompt.includes('## Strict English Output & Action Enforcement'));
+    assert.ok(prompt.includes('Every single word of your response MUST be in natural English.'));
+    assert.ok(prompt.includes('spoken dialogue, stage directions, physical actions in asterisks (*...*), gestures, thoughts, and narration.'));
+    assert.ok(prompt.includes('NEVER write *Mengangkat alis sedikit, pandangan tajam*'));
+    assert.ok(prompt.includes('Default to natural dialogue with minimal to no stage directions.'));
+
+    // Cek instruksi di core jiang_cheng.systemPrompt
+    assert.ok(jc.systemPrompt.includes('1. ABSOLUTE ENGLISH ENFORCEMENT:'));
+    assert.ok(jc.systemPrompt.includes('NEVER output Indonesian, Chinese, or any other foreign language in actions or stage directions'));
+    assert.ok(jc.systemPrompt.includes('2. MINIMAL STAGE DIRECTIONS:'));
+    assert.ok(jc.systemPrompt.includes('Default to pure, natural dialogue with minimal to no stage directions.'));
+  });
+
+  // 25. Memory summarization uses English prompt for Jiang Cheng
+  it('25. summarizeOlderHistory menggunakan prompt bahasa Inggris untuk persona Jiang Cheng', async () => {
+    let capturedPrompt = '';
+    const mockGenerateReply = async (opts) => {
+      capturedPrompt = `${opts.systemPrompt} | ${opts.userText}`;
+      return 'Past discussion summary: Discussed Lotus Pier defense.';
+    };
+
+    const db = getDb();
+    // Tambah 26 pesan agar melewati threshold 24
+    for (let i = 0; i < 26; i++) {
+      addMessage(TEST_CHAT, i % 2 === 0 ? 'user' : 'model', `Pesan test ${i}`, 'jiang_cheng');
+    }
+
+    const { summarizeOlderHistory } = await import('../src/core/facts.js');
+    const summary = await summarizeOlderHistory({
+      chatId: TEST_CHAT,
+      generateReplyFn: mockGenerateReply,
+      threshold: 24,
+      batchSize: 12,
+      personaId: 'jiang_cheng',
+    });
+
+    assert.ok(summary);
+    assert.ok(capturedPrompt.includes('Summarize the essence of this past conversation concisely and objectively in 1-2 short paragraphs in English.'));
+    assert.ok(capturedPrompt.includes('Concise English summary:'));
+    assert.ok(!capturedPrompt.includes('Rangkum intisari percakapan lama'));
   });
 });

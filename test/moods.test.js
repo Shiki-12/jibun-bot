@@ -129,11 +129,11 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       ];
 
       const summary = renderMoodWeekSummary(mockMoods, TZ);
-      assert.ok(summary.includes('Jurnal Mood 7 Hari Terakhir'));
+      assert.ok(summary.includes('7-Day Mood Journal'));
       assert.ok(summary.includes('4.0'));
       assert.ok(summary.includes('███░░'));
       assert.ok(summary.includes('█████'));
-      assert.ok(summary.includes('bukan pengganti diagnosis'));
+      assert.ok(summary.includes('not a substitute for professional medical diagnosis'));
     });
 
     it('renderMoodWeekSummary mengembalikan null jika data kosong', () => {
@@ -155,8 +155,8 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Check-in Mood Harian'));
-      assert.ok(replies[0].text.includes('BUKAN pengganti terapi'));
+      assert.ok(replies[0].text.includes('Daily Mood Check-in'));
+      assert.ok(replies[0].text.includes('NOT a substitute for professional therapy'));
       assert.ok(replies[0].opts.reply_markup);
     });
 
@@ -173,9 +173,9 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Mood Tersimpan'));
+      assert.ok(replies[0].text.includes('Mood Saved'));
       assert.ok(replies[0].text.includes('Hari ini produktif banget'));
-      assert.ok(replies[0].text.includes('BUKAN pengganti terapi'));
+      assert.ok(replies[0].text.includes('NOT a substitute for professional therapy'));
 
       const saved = getTodayMood(TEST_USER_1);
       assert.equal(saved.score, 4);
@@ -213,7 +213,7 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       await cb.handler(ctx);
 
       assert.equal(edits.length, 1);
-      assert.ok(edits[0].text.includes('Mood Tersimpan!'));
+      assert.ok(edits[0].text.includes('Mood Saved!'));
       assert.ok(edits[0].text.includes('5/5'));
 
       const saved = getTodayMood(TEST_USER_1);
@@ -229,7 +229,7 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       };
       const cmd = moodsFeature.commands.find((c) => c.name === 'moodweek');
       await cmd.handler(ctx1);
-      assert.ok(emptyReplies[0].text.includes('Belum ada catatan mood'));
+      assert.ok(emptyReplies[0].text.includes('No mood records'));
 
       // 2. Ada catatan
       recordMood({ userId: TEST_USER_1, score: 4, note: 'mantap', tz: TZ });
@@ -239,7 +239,7 @@ describe('F-24: Mood Check-in & Jurnal', () => {
         reply: async (text, opts) => filledReplies.push({ text, opts }),
       };
       await cmd.handler(ctx2);
-      assert.ok(filledReplies[0].text.includes('Jurnal Mood 7 Hari Terakhir'));
+      assert.ok(filledReplies[0].text.includes('7-Day Mood Journal'));
       assert.ok(filledReplies[0].text.includes('mantap'));
     });
   });
@@ -253,7 +253,7 @@ describe('F-24: Mood Check-in & Jurnal', () => {
       });
 
       assert.ok(msg.includes('/mood'));
-      assert.ok(msg.includes('check-in perasaanmu'));
+      assert.ok(msg.includes('check in with your feelings tonight'));
     });
 
     it('buildNightMessage tidak menyertakan ajakan check-in jika sudah mencatat mood hari ini', () => {
@@ -265,7 +265,7 @@ describe('F-24: Mood Check-in & Jurnal', () => {
         persona: tsundere,
       });
 
-      assert.equal(msg.includes('check-in perasaanmu malam ini: ketik'), false);
+      assert.equal(msg.includes('check in with your feelings tonight'), false);
     });
   });
 });

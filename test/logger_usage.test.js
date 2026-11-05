@@ -201,9 +201,9 @@ test('F-64: Logging dan Pemakaian Token', async (t) => {
     const statsCmd = adminFeature.commands.find((c) => c.name === 'stats');
     await statsCmd.handler(statsCtx);
 
-    assert.match(statsReply, /Pemakaian Token & Kinerja LLM/);
-    assert.match(statsReply, /Total Token:/);
-    assert.match(statsReply, /Rata-rata Latensi:/);
+    assert.match(statsReply, /Token Usage & LLM Performance/);
+    assert.match(statsReply, /Total Tokens:/);
+    assert.match(statsReply, /Average Latency:/);
   });
 });
 

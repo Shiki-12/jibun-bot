@@ -305,17 +305,17 @@ export async function processHabitReminders(bot, now = Date.now()) {
       const streaks = calculateStreaks(habit.id, dateStr);
       const streakInfo =
         streaks.currentStreak > 0
-          ? ` (Streak saat ini: ${streaks.currentStreak} hari (ง •̀_•́)ง)`
+          ? ` (Current streak: ${streaks.currentStreak} days)`
           : '';
 
       const text =
-        `*Pengingat Kebiasaan:*\n` +
-        `Saatnya untuk: *${habit.name}*${streakInfo}!\n` +
-        `Sudahkah kamu melakukannya hari ini?`;
+        `*Habit Reminder:*\n` +
+        `Time for: *${habit.name}*${streakInfo}!\n` +
+        `Have you done it today?`;
 
       const keyboard = new InlineKeyboard()
-        .text('Sudah', `hbt:done:${habit.id}:${dateStr}`)
-        .text('Lewat', `hbt:skip:${habit.id}:${dateStr}`);
+        .text('Done', `hbt:done:${habit.id}:${dateStr}`)
+        .text('Skip', `hbt:skip:${habit.id}:${dateStr}`);
 
       try {
         if (bot?.api?.sendMessage) {

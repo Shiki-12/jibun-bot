@@ -22,11 +22,17 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
   beforeEach(() => {
     const db = getDb();
     db.prepare('DELETE FROM affinity WHERE user_id = ?').run(TEST_USER);
+    try {
+      db.prepare('DELETE FROM persona_affinity WHERE user_id = ?').run(TEST_USER);
+    } catch {}
   });
 
   after(() => {
     const db = getDb();
     db.prepare('DELETE FROM affinity WHERE user_id = ?').run(TEST_USER);
+    try {
+      db.prepare('DELETE FROM persona_affinity WHERE user_id = ?').run(TEST_USER);
+    } catch {}
   });
 
   describe('Level Thresholds & computeLevel', () => {
@@ -134,13 +140,13 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
       assert.ok(bar.includes('░'));
 
       const maxBar = buildProgressBar(250, 200, null);
-      assert.ok(maxBar.includes('Level Maksimal'));
+      assert.ok(maxBar.includes('Max Level'));
     });
 
     it('renderStatusCard menyertakan level, bar, poin hari ini, dan kutipan persona', () => {
       const aff = {
         level: 2,
-        title: 'Mulai luluh',
+        title: 'Growing Trust',
         points: 65,
         gainedToday: 6,
         dailyCap: 15,
@@ -151,7 +157,7 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
           affinityStatus: [
             'Quote 0',
             'Quote 1',
-            'Hmph, jangan geer! Aku cuma udah agak terbiasa.',
+            'Hmph, do not get cocky! I am merely getting somewhat accustomed to you.',
             'Quote 3',
             'Quote 4',
           ],
@@ -159,10 +165,10 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
       };
 
       const card = renderStatusCard(aff, dummyPersona);
-      assert.ok(card.includes('Level: *2* — *"Mulai luluh"*'));
-      assert.ok(card.includes('Total Poin: *65* poin'));
+      assert.ok(card.includes('Level: *2* — *"Growing Trust"*'));
+      assert.ok(card.includes('Total Points: *65* points'));
       assert.ok(card.includes('6/15'));
-      assert.ok(card.includes('Hmph, jangan geer!'));
+      assert.ok(card.includes('Hmph, do not get cocky!'));
     });
   });
 
@@ -180,13 +186,13 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
       };
 
       const prompt = buildSystemPrompt({
-        persona: { systemPrompt: 'Kamu adalah Mika.' },
+        persona: { systemPrompt: 'You are Mika.' },
         ctx,
       });
 
-      assert.ok(prompt.includes('## Level Kedekatan (Affinity)'));
+      assert.ok(prompt.includes('## Relationship Level (Affinity)'));
       assert.ok(prompt.includes('Level 3'));
-      assert.ok(prompt.includes('Malu-malu perhatian'));
+      assert.ok(prompt.includes('Trusted Companion'));
     });
 
     it('/status membalas kartu status affinity', async () => {
@@ -201,8 +207,8 @@ describe('F-20: Sistem Affinity (Level "Dere")', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Status Hubungan & Kedekatan'));
-      assert.ok(replies[0].text.includes('Jutek banget'));
+      assert.ok(replies[0].text.includes('Relationship & Affinity Status'));
+      assert.ok(replies[0].text.includes('Stranger'));
     });
   });
 

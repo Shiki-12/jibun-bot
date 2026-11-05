@@ -250,7 +250,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       },
     };
     await terjemahCmd.handler(ctxEmpty);
-    assert.match(replyMsg, /Format Perintah Terjemah/);
+    assert.match(replyMsg, /Translation Command Format/);
 
     // Uji penolakan URL dengan proteksi SSRF
     let blockedReply = '';
@@ -264,7 +264,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       chat: { id: 123 },
     };
     await terjemahCmd.handler(ctxUrl);
-    assert.match(blockedReply, /keamanan|SSRF|Salin/i);
+    assert.match(blockedReply, /security|SSRF|copy/i);
 
     // Uji bahasa tidak dikenal
     let invalidLangReply = '';
@@ -278,7 +278,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       chat: { id: 123 },
     };
     await terjemahCmd.handler(ctxInvalidLang);
-    assert.match(invalidLangReply, /tidak dikenali/);
+    assert.match(invalidLangReply, /not recognized/i);
   });
 
   await t.test('Perintah /rangkum Menjawab dengan Persona Flavor & Deteksi Pendek', async () => {
@@ -294,7 +294,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       },
     };
     await rangkumCmd.handler(ctxEmpty);
-    assert.match(replyMsg, /Format Perintah Rangkum/);
+    assert.match(replyMsg, /Summary Command Format/);
 
     // Uji teks terlalu pendek
     let shortMsg = '';
@@ -308,7 +308,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       chat: { id: 123 },
     };
     await rangkumCmd.handler(ctxShort);
-    assert.match(shortMsg, /terlalu pendek/i);
+    assert.match(shortMsg, /too short/i);
 
     // Uji proteksi URL pada rangkum
     let urlMsg = '';
@@ -322,7 +322,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
       chat: { id: 123 },
     };
     await rangkumCmd.handler(ctxUrl);
-    assert.match(urlMsg, /keamanan|SSRF|Salin/i);
+    assert.match(urlMsg, /security|SSRF|copy/i);
   });
 
   await t.test('Persona Strings Memiliki String Terjemahan & Rangkuman Lengkap', () => {
@@ -338,7 +338,7 @@ test('F-46: Terjemah dan Rangkum Teks (Translator & Summarizer)', async (t) => {
         typeof p.strings.translateIntro === 'function'
           ? p.strings.translateIntro('Bahasa Inggris')
           : p.strings.translateIntro;
-      assert.match(introStr, /Inggris|terjemah/i);
+      assert.match(introStr, /English|translation|translated/i);
     }
   });
 

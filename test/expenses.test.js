@@ -259,9 +259,9 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
       };
 
       await catatCmd.handler(ctx);
-      assert.ok(replyText.includes('Pengeluaran Dicatat'));
+      assert.ok(replyText.includes('Expense Recorded') || replyText.includes('Expense recorded'));
       assert.ok(replyText.includes('25.000'));
-      assert.ok(replyText.includes('Makanan'));
+      assert.ok(replyText.includes('Makanan') || replyText.includes('Food') || replyText.includes('makanan'));
       assert.ok(replyOptions?.reply_markup);
 
       const list = db
@@ -282,7 +282,7 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
       };
 
       await catatCmd.handler(ctx);
-      assert.ok(replyText.includes('Format perintah'));
+      assert.ok(replyText.includes('Command format'));
     });
 
     it('/rekap menampilkan laporan ringkasan pengeluaran', async () => {
@@ -304,8 +304,8 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
       };
 
       await rekapCmd.handler(ctx);
-      assert.ok(replyText.includes('Rekap Pengeluaran'));
-      assert.ok(replyText.includes('Transport'));
+      assert.ok(replyText.includes('Expense Summary'));
+      assert.ok(replyText.includes('transport') || replyText.includes('Transport'));
       assert.ok(replyText.includes('35.000'));
     });
 
@@ -327,7 +327,7 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
       };
 
       await hapusCmd.handler(ctx);
-      assert.ok(replyText.includes('berhasil dihapus'));
+      assert.ok(replyText.includes('deleted'));
       assert.equal(getExpenseById(exp.id), null);
     });
 
@@ -353,7 +353,7 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
 
       await exportCmd.handler(ctx);
       assert.ok(docSent);
-      assert.ok(optSent?.caption.includes('rekap pengeluaran'));
+      assert.ok(optSent?.caption.toLowerCase().includes('expense report'));
     });
 
     it('callback exp:cat:<id>:<category> mengubah kategori pengeluaran via tombol', async () => {
@@ -401,9 +401,9 @@ describe('F-45: Catat Pengeluaran (Expenses)', () => {
       };
 
       await expenseTag.handle(ctx, ['45000', 'makanan', 'ayam geprek']);
-      assert.ok(replyText.includes('Pengeluaran Dicatat'));
+      assert.ok(replyText.includes('Expense Recorded') || replyText.includes('Expense recorded'));
       assert.ok(replyText.includes('45.000'));
-      assert.ok(replyText.includes('Makanan'));
+      assert.ok(replyText.includes('Makanan') || replyText.includes('Food') || replyText.includes('makanan'));
 
       const saved = db
         .prepare(`SELECT * FROM expenses WHERE user_id = ?`)

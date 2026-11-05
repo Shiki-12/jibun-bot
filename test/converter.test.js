@@ -247,7 +247,7 @@ describe('F-42: Kurs, Kalkulator Aman, dan Konversi Satuan', () => {
 
       await hitungCmd.handler(ctx);
       assert.ok(replyText.includes('90'));
-      assert.ok(replyText.includes('Hasil Perhitungan'));
+      assert.ok(replyText.includes('Calculation Result'));
     });
 
     it('/hitung menampilkan panduan jika argumen kosong', async () => {
@@ -261,7 +261,7 @@ describe('F-42: Kurs, Kalkulator Aman, dan Konversi Satuan', () => {
       };
 
       await hitungCmd.handler(ctx);
-      assert.ok(replyText.includes('Format kalkulator'));
+      assert.ok(replyText.includes('Calculator format'));
     });
 
     it('/kurs mengonversi mata uang', async () => {
@@ -307,7 +307,7 @@ describe('F-42: Kurs, Kalkulator Aman, dan Konversi Satuan', () => {
       };
 
       await konversiCmd.handler(ctx);
-      assert.ok(replyText.includes('Konversi Satuan (panjang)'));
+      assert.ok(replyText.includes('Unit Conversion (panjang)'));
       assert.ok(replyText.includes('3.10685596'));
     });
 

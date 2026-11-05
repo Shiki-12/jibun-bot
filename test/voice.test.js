@@ -50,19 +50,19 @@ test('F-31: Voice Note (STT & TTS Audio)', async (t) => {
     // 1. /voice on
     await voiceCmd.handler(ctx);
     assert.equal(getSetting(ctx, 'voice_reply'), 1);
-    assert.match(replyMsg, /diaktifkan/i);
+    assert.match(replyMsg, /enabled/i);
 
     // 2. /voice off
     ctx.message.text = '/voice off';
     await voiceCmd.handler(ctx);
     assert.equal(getSetting(ctx, 'voice_reply'), 0);
-    assert.match(replyMsg, /(dinonaktifkan|dimatikan)/i);
+    assert.match(replyMsg, /disabled/i);
 
     // 3. /voice (status)
     ctx.message.text = '/voice';
     await voiceCmd.handler(ctx);
-    assert.match(replyMsg, /Pengaturan Balasan Suara/i);
-    assert.match(replyMsg, /nonaktif/i);
+    assert.match(replyMsg, /Voice Reply Settings/i);
+    assert.match(replyMsg, /disabled/i);
   });
 
   await t.test('textToSpeech: Pembuatan Audio TTS dengan Mock Fetch', async () => {

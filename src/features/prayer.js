@@ -12,7 +12,7 @@ export default {
   commands: [
     {
       name: 'sholat',
-      description: 'Lihat 5 waktu sholat hari ini (/sholat [kota])',
+      description: 'View 5 daily prayer times today (/sholat [city])',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const rawArg = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
@@ -21,9 +21,9 @@ export default {
         if (!targetCity) {
           const noCityMsg =
             p.strings?.prayerNoCity ??
-            'Kamu belum mengatur kota domisili!\n' +
-              'Gunakan `/sholat <nama_kota>` (contoh: `/sholat Bandung`)\n' +
-              'atau simpan kotamu dengan `/kota <nama_kota>`.';
+            'You have not set your home city yet!\n' +
+              'Use `/sholat <city_name>` (example: `/sholat Bandung`)\n' +
+              'or save your city with `/kota <city_name>`.';
           await ctx.reply(noCityMsg, { parse_mode: 'Markdown' });
           return;
         }
@@ -37,7 +37,7 @@ export default {
           if (!prayerData) {
             const notFoundMsg =
               p.strings?.prayerCityNotFound?.replace('{city}', targetCity) ??
-              `Jadwal sholat untuk kota "${targetCity}" tidak ditemukan. Coba periksa kembali ejaan nama kotanya.`;
+              `Prayer schedule for city "${targetCity}" not found. Check the spelling of the city name.`;
             await ctx.reply(notFoundMsg);
             return;
           }
@@ -50,17 +50,17 @@ export default {
 
           await ctx.reply(report, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error('Error saat mengambil jadwal sholat:', err);
+          console.error('Error fetching prayer times:', err);
           const errMsg =
             p.strings?.prayerError ??
-            'Gagal mengambil data jadwal sholat saat ini. Coba beberapa saat lagi ya.';
+            'Failed to fetch prayer schedule data at this time. Try again later.';
           await ctx.reply(errMsg);
         }
       },
     },
     {
       name: 'adzan',
-      description: 'Atur pengingat adzan otomatis (/adzan on [menit] atau /adzan off)',
+      description: 'Configure automated prayer reminders (/adzan on [minutes] or /adzan off)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const parts = ctx.message?.text?.trim().split(/\s+/) || [];
@@ -78,15 +78,15 @@ export default {
               p.strings?.adzanStatusActive
                 ?.replace('{city}', currentCity)
                 ?.replace('{lead}', currentLead) ??
-              `Pengingat adzan saat ini: *Aktif* (${currentLead} menit sebelum waktu sholat) untuk wilayah *${currentCity}*.\n\n` +
-                `• Ketik \`/adzan off\` untuk mematikan.\n` +
-                `• Ketik \`/adzan on [menit]\` untuk mengubah jeda waktu (contoh: \`/adzan on 5\`).`;
+              `Prayer reminder status: *Active* (${currentLead} minutes before prayer time) for *${currentCity}*.\n\n` +
+                `• Type \`/adzan off\` to disable.\n` +
+                `• Type \`/adzan on [minutes]\` to adjust lead time (example: \`/adzan on 5\`).`;
             await ctx.reply(statusMsg, { parse_mode: 'Markdown' });
           } else {
             const statusMsg =
               p.strings?.adzanStatusDisabled ??
-              'Pengingat adzan saat ini: *Mati*.\n\n' +
-                'Ketik `/adzan on` untuk mengaktifkan pengingat 10 menit sebelum waktu sholat masuk.';
+              'Prayer reminder status: *Off*.\n\n' +
+                'Type `/adzan on` to enable reminders 10 minutes before prayer time.';
             await ctx.reply(statusMsg, { parse_mode: 'Markdown' });
           }
           return;
@@ -97,7 +97,7 @@ export default {
           cancelPrayerRemindersForTarget(ctx.chat.id, ctx.from?.id);
           const offMsg =
             p.strings?.adzanOff ??
-            'Pengingat adzan otomatis telah dimatikan.';
+            'Automated prayer reminders disabled.';
           await ctx.reply(offMsg);
           return;
         }
@@ -106,7 +106,7 @@ export default {
           if (!currentCity) {
             const noCityMsg =
               p.strings?.adzanNoCity ??
-              'Kota domisili belum diatur!\nSilakan atur kotamu dulu dengan `/kota <nama_kota>` (contoh: `/kota Surabaya`) sebelum mengaktifkan pengingat adzan.';
+              'City has not been set!\nPlease set your city first using `/kota <city_name>` (example: `/kota Surabaya`) before enabling prayer reminders.';
             await ctx.reply(noCityMsg, { parse_mode: 'Markdown' });
             return;
           }
@@ -127,12 +127,12 @@ export default {
               isPrivate,
             });
           } catch (err) {
-            console.error('Error saat menjadwalkan adzan:', err);
+            console.error('Error scheduling prayer reminders:', err);
           }
 
           const template =
             p.strings?.adzanOn ??
-            'Pengingat adzan berhasil diaktifkan untuk wilayah *{city}* ({lead} menit sebelum waktu sholat).';
+            'Prayer reminder enabled for *{city}* ({lead} minutes before prayer time).';
           const replyText = template
             .replace('{city}', currentCity)
             .replace('{lead}', leadMinutes);
@@ -142,7 +142,7 @@ export default {
         }
 
         await ctx.reply(
-          'Format perintah tidak dikenali.\nGunakan `/adzan on [menit]` atau `/adzan off`.',
+          'Unrecognized command format.\nUse `/adzan on [minutes]` or `/adzan off`.',
           { parse_mode: 'Markdown' },
         );
       },
@@ -153,7 +153,7 @@ export default {
     {
       name: 'PRAYER',
       promptHint:
-        'Cek jadwal sholat hari ini untuk kota tertentu. Format: [PRAYER: nama_kota] (contoh: [PRAYER: Jakarta]). Keluarkan tag ini jika user menanyakan jadwal sholat atau waktu adzan.',
+        'Check prayer times for a city. Format: [PRAYER: city_name] (example: [PRAYER: Jakarta]). Emit this tag when user asks for prayer schedule or adzan time.',
       handle: async (ctx, args) => {
         const city = args?.[0]?.trim() || getSetting(ctx, 'city');
         if (!city) return;
@@ -170,7 +170,7 @@ export default {
             await ctx.reply(report, { parse_mode: 'Markdown' });
           }
         } catch (err) {
-          console.error(`Gagal memproses tag [PRAYER: ${city}]:`, err.message);
+          console.error(`Failed to process tag [PRAYER: ${city}]:`, err.message);
         }
       },
     },

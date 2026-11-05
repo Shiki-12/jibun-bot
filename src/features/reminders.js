@@ -60,19 +60,19 @@ export default {
   commands: [
     {
       name: 'remind',
-      description: 'Buat pengingat (contoh: /remind 10m minum obat, /remind 17:30 pulang)',
+      description: 'Set a reminder (example: /remind 10m take medicine, /remind 17:30 go home)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1).join(' ').trim();
 
         if (!args) {
           await ctx.reply(
-            'Format salah! Contoh penggunaan:\n' +
-              '• `/remind 10m minum obat`\n' +
-              '• `/remind 2j cek kompor`\n' +
-              '• `/remind 17:30 pulang kerja`\n' +
-              '• `/remind besok 07:00 olahraga`\n' +
-              '• `/remind tiap hari 06:00 minum vitamin`',
+            'Usage example:\n' +
+              '• `/remind 10m take medicine`\n' +
+              '• `/remind 2h check oven`\n' +
+              '• `/remind 17:30 head home`\n' +
+              '• `/remind tomorrow 07:00 workout`\n' +
+              '• `/remind every day 06:00 take vitamins`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -92,9 +92,9 @@ export default {
           });
 
           const timeFormatted = formatReminderTime(dueAt, tz);
-          let confirmText = `Oke, kuingatkan pada *${timeFormatted}*:\n"${text}"`;
+          let confirmText = `Reminder recorded for *${timeFormatted}*:\n"${text}"`;
           if (repeat) {
-            confirmText += `\n_(Berulang: ${repeat})_`;
+            confirmText += `\n_(Repeating: ${repeat})_`;
           }
 
           const template = p.strings?.reminderSet;
@@ -102,18 +102,18 @@ export default {
             confirmText = template
               .replace('{time}', timeFormatted)
               .replace('{text}', text);
-            if (repeat) confirmText += `\n_(Berulang: ${repeat})_`;
+            if (repeat) confirmText += `\n_(Repeating: ${repeat})_`;
           }
 
           await ctx.reply(confirmText, { parse_mode: 'Markdown' });
         } catch (err) {
-          await ctx.reply(`Gagal membuat pengingat: ${err.message}`);
+          await ctx.reply(`Failed to set reminder: ${err.message}`);
         }
       },
     },
     {
       name: 'reminders',
-      description: 'Lihat daftar pengingat yang sedang aktif',
+      description: 'View active reminders list',
       handler: async (ctx) => {
         const db = getDb();
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
@@ -127,18 +127,18 @@ export default {
           .all(ctx.from.id);
 
         if (rows.length === 0) {
-          await ctx.reply('Kamu tidak memiliki pengingat aktif saat ini.');
+          await ctx.reply('You have no active reminders at the moment.');
           return;
         }
 
-        const lines = ['*Daftar Pengingat Aktif:*', ''];
+        const lines = ['*Active Reminders List:*', ''];
         const keyboard = new InlineKeyboard();
 
         for (const rem of rows) {
           const timeStr = formatReminderTime(rem.due_at, tz);
           const repeatStr = rem.repeat ? ` [${rem.repeat}]` : '';
           lines.push(`• *#${rem.id}* (${timeStr}${repeatStr}):\n  ${rem.text}`);
-          keyboard.text(`Batal #${rem.id}`, `rem:cancel:${rem.id}`).row();
+          keyboard.text(`Cancel #${rem.id}`, `rem:cancel:${rem.id}`).row();
         }
 
         await ctx.reply(lines.join('\n'), {
@@ -149,14 +149,14 @@ export default {
     },
     {
       name: 'cancel',
-      description: 'Batalkan pengingat berdasarkan ID (contoh: /cancel 12)',
+      description: 'Cancel reminder by ID (example: /cancel 12)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
         const targetId = Number(args[0]);
 
         if (!targetId || isNaN(targetId)) {
-          await ctx.reply('Sebutkan ID pengingat yang ingin dibatalkan. Contoh: `/cancel 3`', {
+          await ctx.reply('Specify the reminder ID to cancel. Example: `/cancel 3`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -171,13 +171,13 @@ export default {
           .run(targetId, ctx.from.id);
 
         if (res.changes === 0) {
-          await ctx.reply(`Pengingat #${targetId} tidak ditemukan atau sudah tidak aktif.`);
+          await ctx.reply(`Reminder #${targetId} not found or no longer active.`);
           return;
         }
 
         const msg =
           p.strings?.reminderCancelled?.replace('{id}', targetId) ??
-          `Pengingat #${targetId} berhasil dibatalkan.`;
+          `Reminder #${targetId} cancelled.`;
         await ctx.reply(msg);
       },
     },
@@ -216,12 +216,12 @@ export default {
 
           // Kirim konfirmasi deterministik (aturan umum no. 5)
           const timeFormatted = formatReminderTime(dueAt, tz);
-          let confirm = `*Pengingat Dibuat (#${id})*\nWaktu: ${timeFormatted}\nTugas: ${taskText}`;
-          if (repeatVal) confirm += `\nBerulang: ${repeatVal}`;
+          let confirm = `*Reminder Created (#${id})*\nTime: ${timeFormatted}\nTask: ${taskText}`;
+          if (repeatVal) confirm += `\nRepeating: ${repeatVal}`;
 
           await ctx.reply(confirm, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error('Gagal memproses tag REMIND:', err.message);
+          console.error('Failed to process REMIND tag:', err.message);
         }
       },
     },
@@ -241,7 +241,7 @@ export default {
 
         if (action === 'snz10' || action === 'snz60') {
           const addMs = action === 'snz10' ? 10 * 60_000 : 60 * 60_000;
-          const label = action === 'snz10' ? '10 menit' : '1 jam';
+          const label = action === 'snz10' ? '10 minutes' : '1 hour';
 
           const res = db
             .prepare(
@@ -252,13 +252,13 @@ export default {
             .run(now + addMs, remId);
 
           if (res.changes > 0) {
-            await ctx.answerCallbackQuery({ text: `Ditunda ${label}.` }).catch(() => {});
+            await ctx.answerCallbackQuery({ text: `Snoozed for ${label}.` }).catch(() => {});
             await ctx.editMessageText(
-              ctx.callbackQuery.message.text + `\n\n_(Ditunda ${label})_`,
+              ctx.callbackQuery.message.text + `\n\n_(Snoozed for ${label})_`,
               { parse_mode: 'Markdown' },
             ).catch(() => {});
           } else {
-            await ctx.answerCallbackQuery({ text: 'Pengingat tidak ditemukan.' }).catch(() => {});
+            await ctx.answerCallbackQuery({ text: 'Reminder not found.' }).catch(() => {});
           }
           return;
         }
@@ -268,9 +268,9 @@ export default {
             `UPDATE reminders SET status = 'sent', last_sent_at = ? WHERE id = ?`,
           ).run(now, remId);
 
-          await ctx.answerCallbackQuery({ text: 'Pengingat selesai!' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Reminder completed!' }).catch(() => {});
           await ctx.editMessageText(
-            ctx.callbackQuery.message.text + '\n\n_(Selesai)_',
+            ctx.callbackQuery.message.text + '\n\n_(Completed)_',
             { parse_mode: 'Markdown' },
           ).catch(() => {});
           return;
@@ -281,7 +281,7 @@ export default {
             `UPDATE reminders SET status = 'cancelled' WHERE id = ?`,
           ).run(remId);
 
-          await ctx.answerCallbackQuery({ text: `Pengingat #${remId} dibatalkan.` }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: `Reminder #${remId} cancelled.` }).catch(() => {});
           await ctx.deleteMessage().catch(() => {});
         }
       },

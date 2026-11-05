@@ -117,12 +117,12 @@ export function renderNotesPage(userId, page = 1, tz = 'Asia/Jakarta') {
 
   if (total === 0) {
     return {
-      text: 'Kamu belum memiliki catatan tersimpan. Buat dengan `/note <teks>`!',
+      text: 'You do not have any saved notes yet. Create one with `/note <text>`!',
       keyboard: null,
     };
   }
 
-  const formatter = new Intl.DateTimeFormat('id-ID', {
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
     day: '2-digit',
     month: 'short',
@@ -132,7 +132,7 @@ export function renderNotesPage(userId, page = 1, tz = 'Asia/Jakarta') {
   });
 
   const lines = [
-    `*Daftar Catatan* (Hal ${curPage}/${totalPages} — Total: ${total})`,
+    `*Notes List* (Page ${curPage}/${totalPages} — Total: ${total})`,
     '',
   ];
 
@@ -147,15 +147,15 @@ export function renderNotesPage(userId, page = 1, tz = 'Asia/Jakarta') {
   });
 
   lines.push('');
-  lines.push('_Ketik `/note <id>` untuk membaca isi lengkap._');
+  lines.push('_Type `/note <id>` to read full content._');
 
   const keyboard = new InlineKeyboard();
   if (curPage > 1) {
-    keyboard.text('Sebelumnya', `note:page:${curPage - 1}`);
+    keyboard.text('Previous', `note:page:${curPage - 1}`);
   }
   keyboard.text(`${curPage}/${totalPages}`, 'note:noop');
   if (curPage < totalPages) {
-    keyboard.text('Selanjutnya', `note:page:${curPage + 1}`);
+    keyboard.text('Next', `note:page:${curPage + 1}`);
   }
 
   return { text: lines.join('\n'), keyboard };
@@ -167,19 +167,19 @@ export default {
   commands: [
     {
       name: 'note',
-      description: 'Simpan catatan (/note teks) atau lihat catatan (/note <id>)',
+      description: 'Save note (/note text) or view note (/note <id>)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1).join(' ').trim();
 
         if (!args) {
           await ctx.reply(
-            'Format perintah `/note`:\n' +
-              '• Simpan: `/note password wifi rumah adalah 12345`\n' +
-              '• Simpan dengan label: `/note #kerja #ide rancangan arsitektur bot`\n' +
-              '• Baca catatan: `/note 5`\n' +
-              '• Daftar semua: `/notes`\n' +
-              '• Cari catatan: `/findnote wifi`',
+            'Command format for `/note`:\n' +
+              '• Save: `/note home wifi password is 12345`\n' +
+              '• Save with tags: `/note #work #idea bot architecture draft`\n' +
+              '• Read note: `/note 5`\n' +
+              '• List all: `/notes`\n' +
+              '• Search notes: `/findnote wifi`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -192,22 +192,22 @@ export default {
           if (!note) {
             await ctx.reply(
               p.strings?.noteNotFound?.replace('{id}', singleNumber) ??
-                `Catatan #${singleNumber} tidak ditemukan.`,
+                `Note #${singleNumber} not found.`,
             );
             return;
           }
 
           const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
-          const dateStr = new Intl.DateTimeFormat('id-ID', {
+          const dateStr = new Intl.DateTimeFormat('en-US', {
             timeZone: tz,
             dateStyle: 'medium',
             timeStyle: 'short',
           }).format(new Date(note.created_at));
 
           const tagInfo = note.tags
-            ? `\nLabel: #${note.tags.split(',').join(' #')}`
+            ? `\nTags: #${note.tags.split(',').join(' #')}`
             : '';
-          const replyText = `*Catatan #${note.id}* (${dateStr})${tagInfo}\n\n${note.text}`;
+          const replyText = `*Note #${note.id}* (${dateStr})${tagInfo}\n\n${note.text}`;
 
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
           return;
@@ -217,15 +217,15 @@ export default {
         const { text, tags } = extractHashtags(args);
         const id = insertNote({ userId: ctx.from.id, text, tags });
 
-        let confirmMsg = `Catatan disimpan (*#${id}*)!`;
+        let confirmMsg = `Note saved (*#${id}*)!`;
         if (tags.length > 0) {
-          confirmMsg += `\nLabel: #${tags.join(' #')}`;
+          confirmMsg += `\nTags: #${tags.join(' #')}`;
         }
 
         const template = p.strings?.noteSaved;
         if (template) {
           confirmMsg = template.replace('{id}', id);
-          if (tags.length > 0) confirmMsg += `\nLabel: #${tags.join(' #')}`;
+          if (tags.length > 0) confirmMsg += `\nTags: #${tags.join(' #')}`;
         }
 
         await ctx.reply(confirmMsg, { parse_mode: 'Markdown' });
@@ -233,7 +233,7 @@ export default {
     },
     {
       name: 'notes',
-      description: 'Lihat daftar catatan dengan paginasi 10 per halaman',
+      description: 'View notes list with pagination (10 per page)',
       handler: async (ctx) => {
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
         const args = ctx.message.text.split(/\s+/).slice(1);
@@ -248,14 +248,14 @@ export default {
     },
     {
       name: 'delnote',
-      description: 'Hapus catatan berdasarkan ID (contoh: /delnote 3)',
+      description: 'Delete note by ID (example: /delnote 3)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
         const noteId = Number(args[0]);
 
         if (!noteId || isNaN(noteId)) {
-          await ctx.reply('Sebutkan ID catatan yang ingin dihapus. Contoh: `/delnote 3`', {
+          await ctx.reply('Specify the note ID you want to delete. Example: `/delnote 3`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -265,24 +265,24 @@ export default {
         if (res.changes === 0) {
           await ctx.reply(
             p.strings?.noteNotFound?.replace('{id}', noteId) ??
-              `Catatan #${noteId} tidak ditemukan.`,
+              `Note #${noteId} not found.`,
           );
           return;
         }
 
         const msg =
           p.strings?.noteDeleted?.replace('{id}', noteId) ??
-          `Catatan #${noteId} berhasil dihapus.`;
+          `Note #${noteId} deleted.`;
         await ctx.reply(msg);
       },
     },
     {
       name: 'findnote',
-      description: 'Cari catatan berdasarkan kata kunci atau tag (contoh: /findnote wifi)',
+      description: 'Search notes by keyword or tag (example: /findnote wifi)',
       handler: async (ctx) => {
         const query = ctx.message.text.split(/\s+/).slice(1).join(' ').trim();
         if (!query) {
-          await ctx.reply('Sebutkan kata kunci pencarian. Contoh: `/findnote password`', {
+          await ctx.reply('Specify search keyword. Example: `/findnote password`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -292,11 +292,11 @@ export default {
         const matches = findNotes(ctx.from.id, cleanTerm);
 
         if (matches.length === 0) {
-          await ctx.reply(`Tidak ditemukan catatan yang mengandung "${query}".`);
+          await ctx.reply(`No notes found containing "${query}".`);
           return;
         }
 
-        const lines = [`*Hasil Pencarian "${query}"* (${matches.length} ditemukan):`, ''];
+        const lines = [`*Search Results for "${query}"* (${matches.length} found):`, ''];
         matches.forEach((m) => {
           const preview = m.text.length > 60 ? m.text.slice(0, 57) + '...' : m.text;
           const tagInfo = m.tags ? ` _[#${m.tags.split(',').join(' #')}]_` : '';
@@ -304,7 +304,7 @@ export default {
         });
 
         lines.push('');
-        lines.push('_Ketik `/note <id>` untuk membaca isi lengkap._');
+        lines.push('_Type `/note <id>` to read full content._');
 
         await ctx.reply(lines.join('\n'), { parse_mode: 'Markdown' });
       },
@@ -318,13 +318,13 @@ export default {
       maxArgs: 1,
       maxArgLength: 1000,
       promptHint:
-        'Simpan catatan penting user. Format: [NOTE: isi catatan]. Contoh: [NOTE: wifi rumah passwordnya 12345]',
+        'Save important user note. Format: [NOTE: note text]. Example: [NOTE: home wifi password is 12345]',
       handle: async (ctx, [rawText]) => {
         const { text, tags } = extractHashtags(rawText);
         const id = insertNote({ userId: ctx.from.id, text, tags });
 
-        let confirm = `*Catatan Disimpan (#${id})*:\n"${text}"`;
-        if (tags.length > 0) confirm += `\nLabel: #${tags.join(' #')}`;
+        let confirm = `*Note Saved (#${id})*:\n"${text}"`;
+        if (tags.length > 0) confirm += `\nTags: #${tags.join(' #')}`;
 
         await ctx.reply(confirm, { parse_mode: 'Markdown' });
       },

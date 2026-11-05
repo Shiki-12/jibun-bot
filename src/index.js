@@ -78,9 +78,7 @@ bot.use(async (ctx, next) => {
   // 4. Cek mode maintenance (F-60)
   if (isMaintenanceMode() && !isAdmin(ctx.from?.id)) {
     if (ctx.chat?.type === 'private') {
-      const p = ctx.persona ?? persona;
-      const isEn = p.language === 'en' || p.id === 'jiang_cheng';
-      await ctx.reply(isEn ? 'Bot is undergoing maintenance. Try again later.' : 'Bot sedang dalam mode pemeliharaan (maintenance). Silakan coba lagi nanti ya!').catch(() => {});
+      await ctx.reply('Bot is undergoing maintenance. Try again later.').catch(() => {});
     }
     return;
   }
@@ -89,8 +87,7 @@ bot.use(async (ctx, next) => {
   if (!isUserAllowed(ctx.from?.id)) {
     if (ctx.chat?.type === 'private') {
       const p = ctx.persona ?? persona;
-      const isEn = p.language === 'en' || p.id === 'jiang_cheng';
-      const unauth = p.strings?.unauthorized ?? (isEn ? 'Access denied.' : 'Akses tidak diizinkan.');
+      const unauth = p.strings?.unauthorized ?? 'Access denied.';
       await ctx.reply(unauth).catch(() => {});
     }
     return;
@@ -147,16 +144,13 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
 
   const chatId = ctx.chat.id;
   const activePersona = ctx.persona ?? persona;
-  const isEn = activePersona.language === 'en' || activePersona.id === 'jiang_cheng';
 
   // Cek batas panjang pesan masuk
   const MAX_INPUT_LENGTH = Number(process.env.MAX_INPUT_LENGTH ?? 2000);
   if (isInputTooLong(rawText, MAX_INPUT_LENGTH)) {
     const tooLongMsg =
       activePersona.strings?.inputTooLong ??
-      (isEn
-        ? 'Message is too long. Keep it under 2000 characters.'
-        : 'Pesan terlalu panjang! Maksimal 2000 karakter.');
+      'Message is too long. Keep it under 2000 characters.';
     await ctx.reply(tooLongMsg).catch(() => {});
     return;
   }
@@ -166,9 +160,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
   if (!rateStatus.allowed) {
     const rateMsg =
       activePersona.strings?.rateLimited ??
-      (isEn
-        ? 'Slow down. Wait a moment before speaking again.'
-        : 'Sabar! Jangan spam, tunggu sebentar sebelum memanggil lagi.');
+      'Slow down. Wait a moment before speaking again.';
     await ctx.reply(rateMsg).catch(() => {});
     return;
   }
@@ -216,9 +208,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
             ) {
               const unsupportedMsg =
                 activePersona.strings?.visionUnsupported ??
-                (isEn
-                  ? 'I cannot process or view this image.'
-                  : 'Aku tidak bisa melihat atau memproses gambar ini.');
+                'I cannot process or view this image.';
               await ctx.reply(unsupportedMsg).catch(() => {});
               return;
             }
@@ -234,7 +224,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
         }
 
         if (!raw) {
-          await ctx.reply(isEn ? '...I have no answer for that.' : '...Hmph. Aku nggak mau jawab itu.');
+          await ctx.reply('...I have no answer for that.');
           return;
         }
 
@@ -276,8 +266,8 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
           try {
             const count =
               getDb()
-                .prepare('SELECT count(*) as count FROM messages WHERE chat_id = ? AND (persona_id = ? OR (persona_id IS NULL AND ? != "jiang_cheng"))')
-                .get(chatId, activePersona.id, activePersona.id)?.count ?? 0;
+                .prepare('SELECT count(*) as count FROM messages WHERE chat_id = ? AND (persona_id = ? OR (persona_id IS NULL AND ? = ?))')
+                .get(chatId, activePersona.id, activePersona.id, 'tsundere')?.count ?? 0;
 
             if (ctx.from?.id && count > 0 && count % 20 === 0) {
               await extractAndSaveFacts({
@@ -339,12 +329,9 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
     });
   } catch (err) {
     if (err.message === 'QUEUE_FULL') {
-      const isEn = activePersona.language === 'en' || activePersona.id === 'jiang_cheng';
       const qMsg =
         activePersona.strings?.queueFull ??
-        (isEn
-          ? 'Chat queue is full. Wait until the previous message is handled.'
-          : 'Antrian chat penuh! Tunggu balasan sebelumnya selesai.');
+        'Chat queue is full. Wait until the previous message is handled.';
       await ctx.reply(qMsg).catch(() => {});
       return;
     }
@@ -430,10 +417,11 @@ bot.on('message:sticker', async (ctx) => {
     if (!repliedToBot) return; // di grup hanya respons jika stiker me-reply bot
   }
 
+  const activePersona = ctx.persona ?? persona;
   const setName = ctx.message.sticker?.set_name;
-  let stickerDesc = '[user mengirim stiker]';
+  let stickerDesc = '[user sent a sticker]';
   if (setName) {
-    stickerDesc = `[user mengirim stiker (set: ${setName})]`;
+    stickerDesc = `[user sent a sticker (set: ${setName})]`;
   }
 
   const replyOptions = isPrivate

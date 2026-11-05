@@ -6,43 +6,43 @@ function getPersona(ctx) {
   return ctx?.persona ?? { strings: {} };
 }
 
-function renderMainMenu(ctx) {
+export function renderMainMenu(ctx) {
   const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
   const gifFreq = getSetting(ctx, 'gif_freq', 'normal');
   const personaId = getSetting(ctx, 'persona', 'tsundere');
-  const lang = getSetting(ctx, 'lang', 'id');
+  const lang = getSetting(ctx, 'lang', 'en');
 
   const p = getPersona(ctx);
-  const header = p.strings?.settingsHeader ?? '*Pengaturan Bot*';
+  const header = p.strings?.settingsHeader ?? '*Bot Settings:*';
 
   const text = [
     header,
     '',
-    `• Zona Waktu: \`${tz}\``,
-    `• Frekuensi GIF: \`${gifFreq}\``,
+    `• Timezone: \`${tz}\``,
+    `• GIF Frequency: \`${gifFreq}\``,
     `• Persona: \`${personaId}\``,
-    `• Bahasa: \`${lang}\``,
+    `• Output Language: \`English (Global)\``,
     '',
-    'Pilih opsi di bawah untuk mengubah:',
+    'Select an option below to configure:',
   ].join('\n');
 
   const keyboard = new InlineKeyboard()
-    .text('Zona Waktu', 'set:menu:tz')
-    .text('Frekuensi GIF', 'set:menu:gif')
+    .text('Timezone', 'set:menu:tz')
+    .text('GIF Frequency', 'set:menu:gif')
     .row()
     .text('Persona', 'set:menu:persona')
-    .text('Bahasa', 'set:menu:lang')
+    .text('Language', 'set:menu:lang')
     .row()
-    .text('Tutup', 'set:close');
+    .text('Close', 'set:close');
 
   return { text, keyboard };
 }
 
-function renderTzMenu() {
+export function renderTzMenu() {
   const text = [
-    '*Pengaturan Zona Waktu*',
+    '*Timezone Settings*',
     '',
-    'Pilih zona waktu cepat Indonesia, atau gunakan perintah manual:',
+    'Quick-select a timezone or configure manually with:',
     '`/timezone Asia/Makassar`',
   ].join('\n');
 
@@ -52,35 +52,35 @@ function renderTzMenu() {
     .row()
     .text('WIT (Jayapura)', 'set:val:tz:Asia/Jayapura')
     .row()
-    .text('Kembali', 'set:menu:main');
+    .text('Back', 'set:menu:main');
 
   return { text, keyboard };
 }
 
 function renderGifMenu() {
   const text = [
-    '*Frekuensi GIF*',
+    '*GIF Frequency*',
     '',
-    'Atur seberapa sering bot mengirimkan animasi GIF:',
+    'Set how often the bot sends GIF animations:',
   ].join('\n');
 
   const keyboard = new InlineKeyboard()
-    .text('Mati', 'set:val:gif_freq:off')
-    .text('Jarang (1/10)', 'set:val:gif_freq:rare')
+    .text('Off', 'set:val:gif_freq:off')
+    .text('Rare (1/10)', 'set:val:gif_freq:rare')
     .row()
     .text('Normal (1/4)', 'set:val:gif_freq:normal')
-    .text('Sering (1/2)', 'set:val:gif_freq:often')
+    .text('Often (1/2)', 'set:val:gif_freq:often')
     .row()
-    .text('Kembali', 'set:menu:main');
+    .text('Back', 'set:menu:main');
 
   return { text, keyboard };
 }
 
 const PERSONA_LABELS = {
   tsundere: 'Raka (Tsundere)',
-  manis: 'Rio (Manis)',
-  ceria: 'Nando (Ceria)',
-  sarkas: 'Kael (Sarkas)',
+  manis: 'Rio (Sweet)',
+  ceria: 'Nando (Cheerful)',
+  sarkas: 'Kael (Sarcastic)',
   jiang_cheng: 'Jiang Cheng (Exclusive)',
   custom: 'Custom Persona',
 };
@@ -95,19 +95,19 @@ export function renderPersonaMenu() {
     if (idx % 2 === 1) keyboard.row();
   });
   if (personas.length % 2 !== 0) keyboard.row();
-  keyboard.text('Kembali', 'set:menu:main');
+  keyboard.text('Back', 'set:menu:main');
 
-  const text = '*Pilih Persona Aktif:*\n(Pengaturan persona per-chat)';
+  const text = '*Select Active Persona:*\n(Per-chat persona setting)';
   return { text, keyboard };
 }
 
 function renderLangMenu() {
-  const text = '*Pilih Bahasa / Language:*';
+  const text =
+    '*Output Language:*\n\nJibun Bot output is globally English. You can chat in any language (Indonesian, Japanese, etc.), and the bot will understand and respond in English.';
   const keyboard = new InlineKeyboard()
-    .text('Indonesia', 'set:val:lang:id')
-    .text('English', 'set:val:lang:en')
+    .text('English (Default)', 'set:val:lang:en')
     .row()
-    .text('Kembali', 'set:menu:main');
+    .text('Back', 'set:menu:main');
 
   return { text, keyboard };
 }
@@ -118,7 +118,7 @@ export default {
   commands: [
     {
       name: 'settings',
-      description: 'Atur preferensi bot (zona waktu, GIF, bahasa, persona)',
+      description: 'Configure bot preferences (timezone, GIF, language, persona)',
       handler: async (ctx) => {
         const { text, keyboard } = renderMainMenu(ctx);
         await ctx.reply(text, {
@@ -129,7 +129,7 @@ export default {
     },
     {
       name: 'timezone',
-      description: 'Ganti zona waktu (contoh: /timezone Asia/Makassar)',
+      description: 'Change timezone (example: /timezone Asia/Makassar)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
@@ -138,7 +138,7 @@ export default {
         if (!inputTz) {
           const currentTz = getSetting(ctx, 'tz', 'Asia/Jakarta');
           await ctx.reply(
-            `Zona waktumu saat ini: ${currentTz}\nUntuk mengganti, ketik: /timezone <nama_iana>\nContoh: /timezone Asia/Makassar atau /timezone Europe/London`,
+            `Your current timezone: ${currentTz}\nTo change it, type: /timezone <iana_name>\nExample: /timezone Asia/Makassar or /timezone Europe/London`,
           );
           return;
         }
@@ -146,7 +146,7 @@ export default {
         if (!isValidTimezone(inputTz)) {
           const errMsg =
             p.strings?.tzInvalid ??
-            `Format zona waktu '${inputTz}' tidak valid. Gunakan nama IANA yang benar seperti Asia/Jakarta atau Asia/Makassar.`;
+            `Timezone format '${inputTz}' is invalid. Use a valid IANA name like Asia/Jakarta or Asia/Makassar.`;
           await ctx.reply(errMsg);
           return;
         }
@@ -155,7 +155,7 @@ export default {
 
         const successMsg =
           p.strings?.tzSuccess?.replace('{tz}', inputTz) ??
-          `Zona waktu berhasil diubah ke ${inputTz}.`;
+          `Timezone successfully changed to ${inputTz}.`;
         await ctx.reply(successMsg);
       },
     },

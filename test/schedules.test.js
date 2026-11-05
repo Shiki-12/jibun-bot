@@ -144,7 +144,7 @@ describe('F-13: Pesan Pagi & Malam Terjadwal', () => {
 
       const msg = buildNightMessage({ userId: TEST_USER, tz: TZ, now });
       assert.ok(msg.includes('1 to-do'));
-      assert.ok(msg.includes('Gimana harimu'));
+      assert.ok(msg.includes('How was your day'));
     });
   });
 
@@ -257,7 +257,7 @@ describe('F-13: Pesan Pagi & Malam Terjadwal', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('dimatikan'));
+      assert.ok(replies[0].includes('disabled'));
 
       const sched = getSchedule(TEST_CHAT, TEST_USER, 'morning');
       assert.equal(sched.status, 'disabled');
@@ -278,7 +278,7 @@ describe('F-13: Pesan Pagi & Malam Terjadwal', () => {
 
       assert.equal(replies.length, 1);
       assert.ok(replies[0].msg.includes('07:00'));
-      assert.ok(replies[0].msg.includes('*Malam:* Mati'));
+      assert.ok(replies[0].msg.includes('*Night:* Off'));
     });
   });
 });

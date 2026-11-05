@@ -110,9 +110,9 @@ export function buildMorningMessage({ userId, tz = 'Asia/Jakarta', persona, now 
 
   // 3. Susun salam acak
   const greetings = p.strings?.morningGreetings ?? [
-    'Pagi! Bangun napa, jangan molor terus! ( `_´ )',
-    'Hei, udah pagi! B-bukan berarti aku nungguin kamu bangun ya! (¬_¬)',
-    'Pagi... Jangan malas-malasan hari ini! ( `_´ )',
+    'Morning. Time to wake up, do not slack off. ( `_´ )',
+    'Hey, morning already. It is not like I was waiting for you to wake up. (¬_¬)',
+    'Morning... Do not be lazy today. ( `_´ )',
   ];
   const greeting = greetings[Math.floor(Math.random() * greetings.length)];
 
@@ -120,33 +120,32 @@ export function buildMorningMessage({ userId, tz = 'Asia/Jakarta', persona, now 
 
   // 4. Bagian pengingat
   if (todayReminders.length > 0) {
-    lines.push(p.strings?.morningRemindersHeader ?? '*Jadwal pengingat kamu hari ini:*');
+    lines.push(p.strings?.morningRemindersHeader ?? '*Your reminders for today:*');
     todayReminders.forEach((r) => {
       const rParts = getZonedParts(new Date(r.due_at), tz);
       const timeStr = `${String(rParts.hour).padStart(2, '0')}:${String(rParts.minute).padStart(2, '0')}`;
       lines.push(`• \`${timeStr}\` - ${r.text}`);
     });
   } else {
-    lines.push(p.strings?.morningNoReminders ?? 'Hari ini kamu nggak punya jadwal pengingat khusus.');
+    lines.push(p.strings?.morningNoReminders ?? 'You have no scheduled reminders for today.');
   }
 
   lines.push('');
 
   // 5. Bagian to-do
   if (pendingTodos.length > 0) {
-    lines.push(p.strings?.morningTodosHeader ?? '*To-do yang belum selesai:*');
+    lines.push(p.strings?.morningTodosHeader ?? '*Pending to-dos:*');
     pendingTodos.forEach((t, idx) => {
       lines.push(`• ${t.text}`);
     });
   } else {
-    lines.push(p.strings?.morningAllTodosDone ?? 'Semua to-do kamu beres, lumayan rajin ya. (¬_¬)');
+    lines.push(p.strings?.morningAllTodosDone ?? 'All your to-dos are done. Quite diligent. (¬_¬)');
   }
 
   // 6. Bagian cuaca (jika disediakan)
   if (weatherSummary) {
-    const isEn = p.language === 'en' || p.id === 'jiang_cheng';
     lines.push('');
-    lines.push(isEn ? "*Today's Weather Forecast:*" : '*Prakiraan Cuaca Hari Ini:*');
+    lines.push("*Today's Weather Forecast:*");
     lines.push(weatherSummary);
   }
 
@@ -156,7 +155,6 @@ export function buildMorningMessage({ userId, tz = 'Asia/Jakarta', persona, now 
 export function buildNightMessage({ userId, tz = 'Asia/Jakarta', persona, now = Date.now() }) {
   const db = getDb();
   const p = persona ?? { strings: {} };
-  const isEn = p.language === 'en' || p.id === 'jiang_cheng';
   const parts = getZonedParts(new Date(now), tz);
 
   const startOfDayMs = zonedPartsToUtcMs(
@@ -186,9 +184,9 @@ export function buildNightMessage({ userId, tz = 'Asia/Jakarta', persona, now = 
 
   // 3. Susun salam acak
   const greetings = p.strings?.nightGreetings ?? [
-    'Udah malam gini belum tidur juga? Jangan begadang terus, bodoh! ( `_´ )',
-    'Malam... Masih bangun aja. Kerjaan hari ini udah kelar belum? (¬_¬)',
-    'Hei, udah larut malam nih. B-bukan berarti aku peduli kesehatanmu ya! (¬_¬)',
+    'Still awake this late? Do not stay up late, idiot. ( `_´ )',
+    'Night... Still up. Did you finish your work today? (¬_¬)',
+    'Hey, it is late. Not that I care about your health or anything. (¬_¬)',
   ];
   const greeting = greetings[Math.floor(Math.random() * greetings.length)];
 
@@ -198,31 +196,29 @@ export function buildNightMessage({ userId, tz = 'Asia/Jakarta', persona, now = 
   if (doneTodayCount > 0) {
     const template =
       p.strings?.nightTodosCompleted ??
-      'Bagus, hari ini kamu berhasil nyelesaiin {count} to-do!';
+      'Good, you managed to complete {count} to-dos today.';
     lines.push(template.replace('{count}', doneTodayCount));
   } else {
     lines.push(
       p.strings?.nightNoTodosCompleted ??
-        'Hari ini nggak ada to-do yang kamu selesaikan. Santai banget ya! (¬_¬)',
+        'You did not finish any to-dos today. Taking it easy, huh. (¬_¬)',
     );
   }
 
   if (pendingCount > 0) {
     const template =
-      p.strings?.nightPendingTodos ?? 'Masih ada {count} to-do yang belum beres buat besok.';
+      p.strings?.nightPendingTodos ?? 'There are still {count} pending to-dos left for tomorrow.';
     lines.push(template.replace('{count}', pendingCount));
   }
 
   lines.push('');
-  lines.push(p.strings?.nightCheckin ?? 'Gimana harimu hari ini? Istirahat sana, besok lanjut lagi.');
+  lines.push(p.strings?.nightCheckin ?? 'How was your day? Go rest, continue tomorrow.');
 
   try {
     const todayMood = getTodayMood(userId, tz, now);
     if (!todayMood) {
       lines.push(
-        isEn
-          ? '\n_Take a moment to check in with your feelings tonight: type_ `/mood`.'
-          : '\n_Luangkan waktu sejenak untuk check-in perasaanmu malam ini: ketik_ `/mood`.'
+        '\n_Take a moment to check in with your feelings tonight: type_ `/mood`.'
       );
     }
   } catch {}
@@ -310,7 +306,7 @@ export async function processDailySchedules(bot, now = Date.now()) {
         if (userCity) {
           const w = await getWeatherData(userCity);
           if (w) {
-            weatherSummary = `• Di *${w.city}*: ${w.conditionText}, suhu ${w.temp}°C (peluang hujan ${w.rainProb}%).`;
+            weatherSummary = `• In *${w.city}*: ${w.conditionText}, temp ${w.temp}°C (rain chance ${w.rainProb}%).`;
           }
         }
       } catch {}
@@ -342,7 +338,7 @@ export async function processDailySchedules(bot, now = Date.now()) {
       dispatchedCount++;
     } catch (err) {
       console.error(
-        `Gagal mengirim pesan terjadwal ${s.type} ke chat ${s.chat_id}:`,
+        `Failed to send scheduled message ${s.type} to chat ${s.chat_id}:`,
         err.message,
       );
 
@@ -373,33 +369,28 @@ export default {
   commands: [
     {
       name: 'morning',
-      description: 'Atur pesan sapaan & ringkasan pagi (/morning 07:00 atau /morning off)',
+      description: 'Configure morning greeting & briefing (/morning 07:00 or /morning off)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
-        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const arg = ctx.message.text.split(/\s+/)[1]?.trim();
 
         if (!arg) {
           const sched = getSchedule(ctx.chat.id, ctx.from.id, 'morning');
           if (!sched || sched.status !== 'active') {
             await ctx.reply(
-              isEn
-                ? 'Morning message is currently *off*.\nType `/morning 07:00` to turn on at 07:00.'
-                : 'Pesan pagi saat ini *mati*.\nKetik `/morning 07:00` untuk menyalakan jam 07:00.',
+              'Morning message is currently *off*.\nType `/morning 07:00` to turn on at 07:00.',
               { parse_mode: 'Markdown' },
             );
           } else {
             await ctx.reply(
-              isEn
-                ? `Morning message active at *${sched.time}* (${sched.tz}).\nType \`/morning off\` to disable.`
-                : `Pesan pagi aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/morning off\` untuk mematikan.`,
+              `Morning message active at *${sched.time}* (${sched.tz}).\nType \`/morning off\` to disable.`,
               { parse_mode: 'Markdown' },
             );
           }
           return;
         }
 
-        const typeLabel = isEn ? 'morning' : 'pagi';
+        const typeLabel = 'morning';
         if (arg.toLowerCase() === 'off') {
           disableSchedule({
             chatId: ctx.chat.id,
@@ -408,16 +399,14 @@ export default {
           });
           const replyText =
             p.strings?.scheduleOff?.replace('{type}', typeLabel) ??
-            (isEn ? 'Morning message schedule disabled.' : 'Jadwal pesan pagi sudah dimatikan.');
+            'Morning message schedule disabled.';
           await ctx.reply(replyText);
           return;
         }
 
         if (!isValidTimeFormat(arg)) {
           await ctx.reply(
-            isEn
-              ? 'Invalid time format! Use HH:mm format (example: `/morning 07:00`)'
-              : 'Format jam tidak valid! Gunakan format HH:mm (contoh: `/morning 07:00`)',
+            'Invalid time format! Use HH:mm format (example: `/morning 07:00`)',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -434,9 +423,7 @@ export default {
 
         const replyTemplate =
           p.strings?.scheduleSet ??
-          (isEn
-            ? '{type} message schedule set for *{time}* ({tz}).'
-            : 'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).');
+          '{type} message schedule set for *{time}* ({tz}).';
         const replyText = replyTemplate
           .replace('{type}', typeLabel)
           .replace('{time}', arg)
@@ -447,33 +434,28 @@ export default {
     },
     {
       name: 'night',
-      description: 'Atur pesan sapaan & ringkasan malam (/night 22:30 atau /night off)',
+      description: 'Configure night greeting & summary (/night 22:30 or /night off)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
-        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const arg = ctx.message.text.split(/\s+/)[1]?.trim();
 
         if (!arg) {
           const sched = getSchedule(ctx.chat.id, ctx.from.id, 'night');
           if (!sched || sched.status !== 'active') {
             await ctx.reply(
-              isEn
-                ? 'Night message is currently *off*.\nType `/night 22:30` to turn on at 22:30.'
-                : 'Pesan malam saat ini *mati*.\nKetik `/night 22:30` untuk menyalakan jam 22:30.',
+              'Night message is currently *off*.\nType `/night 22:30` to turn on at 22:30.',
               { parse_mode: 'Markdown' },
             );
           } else {
             await ctx.reply(
-              isEn
-                ? `Night message active at *${sched.time}* (${sched.tz}).\nType \`/night off\` to disable.`
-                : `Pesan malam aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/night off\` untuk mematikan.`,
+              `Night message active at *${sched.time}* (${sched.tz}).\nType \`/night off\` to disable.`,
               { parse_mode: 'Markdown' },
             );
           }
           return;
         }
 
-        const typeLabel = isEn ? 'night' : 'malam';
+        const typeLabel = 'night';
         if (arg.toLowerCase() === 'off') {
           disableSchedule({
             chatId: ctx.chat.id,
@@ -482,16 +464,14 @@ export default {
           });
           const replyText =
             p.strings?.scheduleOff?.replace('{type}', typeLabel) ??
-            (isEn ? 'Night message schedule disabled.' : 'Jadwal pesan malam sudah dimatikan.');
+            'Night message schedule disabled.';
           await ctx.reply(replyText);
           return;
         }
 
         if (!isValidTimeFormat(arg)) {
           await ctx.reply(
-            isEn
-              ? 'Invalid time format! Use HH:mm format (example: `/night 22:30`)'
-              : 'Format jam tidak valid! Gunakan format HH:mm (contoh: `/night 22:30`)',
+            'Invalid time format! Use HH:mm format (example: `/night 22:30`)',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -508,9 +488,7 @@ export default {
 
         const replyTemplate =
           p.strings?.scheduleSet ??
-          (isEn
-            ? '{type} message schedule set for *{time}* ({tz}).'
-            : 'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).');
+          '{type} message schedule set for *{time}* ({tz}).';
         const replyText = replyTemplate
           .replace('{type}', typeLabel)
           .replace('{time}', arg)
@@ -521,41 +499,31 @@ export default {
     },
     {
       name: 'schedules',
-      description: 'Lihat status jadwal pesan pagi & malam terjadwal',
+      description: 'View active morning & night scheduled messages',
       handler: async (ctx) => {
-        const p = ctx.persona ?? { strings: {} };
-        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const rows = getAllUserSchedules(ctx.chat.id, ctx.from.id);
         const morning = rows.find((r) => r.type === 'morning');
         const night = rows.find((r) => r.type === 'night');
 
         let morningStatus;
         if (morning && morning.status === 'active') {
-          morningStatus = isEn
-            ? `Active at *${morning.time}* (${morning.tz})`
-            : `Aktif jam *${morning.time}* (${morning.tz})`;
+          morningStatus = `Active at *${morning.time}* (${morning.tz})`;
         } else {
-          morningStatus = isEn ? 'Off (`/morning 07:00`)' : 'Mati (`/morning 07:00`)';
+          morningStatus = 'Off (`/morning 07:00`)';
         }
 
         let nightStatus;
         if (night && night.status === 'active') {
-          nightStatus = isEn
-            ? `Active at *${night.time}* (${night.tz})`
-            : `Aktif jam *${night.time}* (${night.tz})`;
+          nightStatus = `Active at *${night.time}* (${night.tz})`;
         } else {
-          nightStatus = isEn ? 'Off (`/night 22:30`)' : 'Mati (`/night 22:30`)';
+          nightStatus = 'Off (`/night 22:30`)';
         }
 
-        const text = isEn
-          ? `*Scheduled Messages:*\n\n` +
-            `• *Morning:* ${morningStatus}\n` +
-            `• *Night:* ${nightStatus}\n\n` +
-            `_Type \`/morning off\` or \`/night off\` to disable._`
-          : `*Jadwal Pesan Terjadwal:*\n\n` +
-            `• *Pagi:* ${morningStatus}\n` +
-            `• *Malam:* ${nightStatus}\n\n` +
-            `_Ketik \`/morning off\` atau \`/night off\` untuk mematikan._`;
+        const text =
+          `*Scheduled Messages:*\n\n` +
+          `• *Morning:* ${morningStatus}\n` +
+          `• *Night:* ${nightStatus}\n\n` +
+          `_Type \`/morning off\` or \`/night off\` to disable._`;
 
         await ctx.reply(text, { parse_mode: 'Markdown' });
       },

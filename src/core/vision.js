@@ -46,7 +46,7 @@ export function selectBestPhoto(photos, { maxBytes = MAX_PHOTO_BYTES, maxDimensi
  */
 export function buildPhotoPlaceholder(caption) {
   const clean = (caption || '').trim();
-  return clean ? `[user mengirim foto: ${clean}]` : '[user mengirim foto]';
+  return clean ? `[user sent photo: ${clean}]` : '[user sent photo]';
 }
 
 /**
@@ -125,7 +125,7 @@ export async function downloadPhotoAsBase64({
  * @returns {Array<object>}
  */
 export function formatVisionUserContent(caption, imageDataUrl) {
-  const promptText = (caption || '').trim() || 'Foto apa ini? Tolong jelaskan.';
+  const promptText = (caption || '').trim() || 'What is in this photo? Please explain.';
   return [
     {
       type: 'text',

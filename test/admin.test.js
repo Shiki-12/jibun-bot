@@ -194,8 +194,8 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
     };
     const statsCmd = adminFeature.commands.find((c) => c.name === 'stats');
     await statsCmd.handler(adminCtx);
-    assert.match(statsMsg, /Statistik Operasional Bot/);
-    assert.match(statsMsg, /Total Pengguna/);
+    assert.match(statsMsg, /Bot Operational Statistics/);
+    assert.match(statsMsg, /Total Users/);
 
     // 2. /ban
     const banCmd = adminFeature.commands.find((c) => c.name === 'ban');
@@ -206,7 +206,7 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
 
     adminCtx.message.text = '/ban 55566677 spammer grup';
     await banCmd.handler(adminCtx);
-    assert.match(banReply, /Berhasil Diblokir/);
+    assert.match(banReply, /Successfully Banned/);
     assert.equal(isUserBanned(55566677), true);
 
     // 3. /unban
@@ -218,7 +218,7 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
 
     adminCtx.message.text = '/unban 55566677';
     await unbanCmd.handler(adminCtx);
-    assert.match(unbanReply, /Berhasil Dibuka Blokirnya/);
+    assert.match(unbanReply, /Successfully Unbanned/);
     assert.equal(isUserBanned(55566677), false);
 
     // 4. /model
@@ -230,11 +230,11 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
 
     adminCtx.message.text = '/model';
     await modelCmd.handler(adminCtx);
-    assert.match(modelReply, /Model LLM Saat Ini/);
+    assert.match(modelReply, /Current LLM Model/);
 
     adminCtx.message.text = '/model mistralai/mistral-large-2512';
     await modelCmd.handler(adminCtx);
-    assert.match(modelReply, /Berhasil Diganti/);
+    assert.match(modelReply, /Successfully Changed/);
 
     // 5. /maintenance
     const maintCmd = adminFeature.commands.find((c) => c.name === 'maintenance');
@@ -245,12 +245,12 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
 
     adminCtx.message.text = '/maintenance on';
     await maintCmd.handler(adminCtx);
-    assert.match(maintReply, /Diaktifkan/);
+    assert.match(maintReply, /Enabled/);
     assert.equal(isMaintenanceMode(), true);
 
     adminCtx.message.text = '/maintenance off';
     await maintCmd.handler(adminCtx);
-    assert.match(maintReply, /Dimatikan/);
+    assert.match(maintReply, /Disabled/);
     assert.equal(isMaintenanceMode(), false);
   });
 
@@ -270,7 +270,7 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
     };
 
     await bcCmd.handler(adminCtx);
-    assert.match(previewMsg, /Konfirmasi Siaran/);
+    assert.match(previewMsg, /Broadcast Confirmation/);
     assert.match(previewMsg, /Pengumuman rilis v2\.0!/);
     assert.ok(previewMarkup);
 
@@ -286,6 +286,6 @@ test('F-60: Perintah Admin (Stats, Ban/Unban, Broadcast, Model & Maintenance)', 
       },
     };
     await cancelCallback.handler(cancelCtx);
-    assert.match(cancelText, /dibatalkan/i);
+    assert.match(cancelText, /cancelled/i);
   });
 });

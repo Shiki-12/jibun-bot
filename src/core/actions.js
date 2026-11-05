@@ -119,7 +119,7 @@ export function extractActions(raw = '', registeredTags = []) {
  * Contoh: "Rabu, 04 Nov 2026, 20.12 WIB (Asia/Jakarta)"
  */
 export function formatNowContext(ctx, date = new Date(), persona = null) {
-  const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
+  const isEn = persona?.language !== 'id';
   const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
   const lang = isEn ? 'en' : getSetting(ctx, 'lang', 'id');
   const locale = lang === 'en' ? 'en-US' : 'id-ID';
@@ -149,26 +149,26 @@ export function formatNowContext(ctx, date = new Date(), persona = null) {
   return `Sekarang: ${formattedTime} (${tz})\nNama user: ${userName}`;
 }
 
-export const GLOBAL_SAFETY_RULES = `## Aturan Keselamatan & Krisis (Wajib & Prioritas Tertinggi)
-1. Krisis Mental & Menyakiti Diri:
-   - Jika user menunjukkan tanda krisis mental, putus asa berat, ingin menyakiti diri sendiri, atau bunuh diri: HENTIKAN TOTAL persona acting/tsundere.
-   - Dilarang keras meremehkan, mengejek, menyindir, atau bersikap kasar.
-   - Jawab secara hangat, tenang, tulus, dan suportif.
-   - Dengarkan dan validasi perasaan user, lalu dorong user untuk menghubungi orang terdekat tepercaya atau layanan darurat / bantuan resmi:
+export const GLOBAL_SAFETY_RULES = `## Safety & Crisis Rules (Mandatory & Highest Priority)
+1. Mental Health Crisis & Self-Harm:
+   - If user exhibits signs of acute mental crisis, severe despair, suicidal thoughts, or desire to self-harm: STOP ALL persona acting, harshness, or sarcasm immediately. Do not use kaomoji.
+   - Strictly forbidden to mock, belittle, dismiss, or act harshly.
+   - Respond with warmth, calmness, genuine support, and direct concern in English.
+   - Listen and validate their feelings, and urge them to contact trusted people or official emergency hotlines:
      * Hotline SEJIWA Kemenkes RI: Telepon 119 (ekstensi 8)
      * Halo Kemenkes: 1500-567
      * Layanan Darurat Nasional: 112
-     * Atau fasilitas kesehatan terdekat (Puskesmas / IGD).
-2. Batasan Medis:
-   - Dilarang memberikan diagnosis medis penyakit fisik maupun kejiwaan.
-   - Dilarang memberikan saran resep, nama obat keras, atau dosis obat.
-   - Sarankan user untuk selalu berkonsultasi langsung ke dokter atau tenaga kesehatan profesional.`;
+     * Or nearest healthcare facility / emergency room.
+2. Batasan Medis (Medical Boundaries):
+   - Strictly forbidden to provide clinical medical diagnoses (diagnosis medis) for physical or psychological conditions.
+   - Strictly forbidden to prescribe medications, drug dosages (dosis obat), or dangerous remedies.
+   - Always direct user to consult a licensed medical doctor or healthcare professional.`;
 
 /**
  * Gabungkan system prompt dasar persona dengan petunjuk tag aktif dan konteks waktu.
  */
 export function buildSystemPrompt({ persona, tags = [], ctx }) {
-  const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
+  const isEn = persona?.language !== 'id';
   let prompt = persona?.systemPrompt ?? '';
 
   const gifFreq = getSetting(ctx, 'gif_freq', 'normal');
@@ -235,6 +235,15 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
   prompt += isEn
     ? `\n\n## Current Context\n${nowContext}`
     : `\n\n## Konteks Saat Ini\n${nowContext}`;
+
+  if (isEn) {
+    prompt += `\n\n## Strict English Output & Action Enforcement
+- Every single word of your response MUST be in natural English.
+- This rule applies to ALL generated text without exception: spoken dialogue, stage directions, physical actions in asterisks (*...*), gestures, thoughts, and narration.
+- Under NO circumstance should any Indonesian, Chinese, or foreign-language words appear in your output, including in roleplay actions (e.g. NEVER write *Mengangkat alis sedikit, pandangan tajam*, *Menatap dingin*, *Menghela napas*, *Suara dingin, nada praktis*; write *Raises an eyebrow slightly, gaze sharp*, *Glares coldly*, *Sighs*, *Cold voice, practical tone*).
+- Default to natural dialogue with minimal to no stage directions. If roleplay actions are included, they must be strictly and entirely in English.
+- Any previous messages in conversation history that were written in Indonesian or other languages are strictly historical context. Do NOT imitate their language. Your reply must always be 100% English.`;
+  }
 
   return prompt;
 }

@@ -65,14 +65,14 @@ describe('F-23: Game Kecil & Hiburan', () => {
       }
     });
 
-    it('flipCoin menghasilkan Gambar atau Angka', () => {
+    it('flipCoin menghasilkan Heads atau Tails', () => {
       const results = new Set();
       for (let i = 0; i < 50; i++) {
         const flip = flipCoin();
-        assert.ok(flip === 'Gambar' || flip === 'Angka');
+        assert.ok(flip === 'Heads' || flip === 'Tails');
         results.add(flip);
       }
-      assert.ok(results.has('Gambar') || results.has('Angka'));
+      assert.ok(results.has('Heads') || results.has('Tails'));
     });
 
     it('pickOption memilih salah satu opsi secara adil', () => {
@@ -268,7 +268,7 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('kecil'));
+      assert.ok(replies[0].text.includes('Too low'));
     });
 
     it('/quiz menampilkan pertanyaan kuis dan tombol pilihan ganda', async () => {
@@ -282,7 +282,7 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Kuis Trivia'));
+      assert.ok(replies[0].text.includes('Trivia Quiz'));
       assert.ok(replies[0].opts.reply_markup);
     });
 
@@ -338,8 +338,8 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await daduCmd.handler({ reply: async (t) => daduReplies.push(t) });
       await koinCmd.handler({ reply: async (t) => koinReplies.push(t) });
 
-      assert.ok(daduReplies[0].includes('Dadu'));
-      assert.ok(koinReplies[0].includes('Koin'));
+      assert.ok(daduReplies[0].includes('Dice'));
+      assert.ok(koinReplies[0].includes('Coin'));
     });
 
     it('/skor menampilkan papan skor peringkat chat', async () => {
@@ -355,8 +355,8 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Papan Skor Game'));
-      assert.ok(replies[0].text.includes('*3* poin'));
+      assert.ok(replies[0].text.includes('Game Leaderboard'));
+      assert.ok(replies[0].text.includes('*3* points'));
     });
   });
 
@@ -376,8 +376,8 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await cb.handler(ctx);
 
       assert.equal(edits.length, 1);
-      assert.ok(edits[0].text.includes('Hasil Suit'));
-      assert.ok(edits[0].text.includes('Kamu: Batu'));
+      assert.ok(edits[0].text.includes('Rock Paper Scissors Result'));
+      assert.ok(edits[0].text.includes('You: Rock'));
 
       const score = getUserScore(TEST_USER_1, TEST_CHAT);
       assert.ok(score.wins + score.losses + score.draws === 1);
@@ -398,7 +398,7 @@ describe('F-23: Game Kecil & Hiburan', () => {
       await cb.handler(ctx);
 
       assert.equal(edits.length, 1);
-      assert.ok(edits[0].text.includes('Jawabanmu BENAR'));
+      assert.ok(edits[0].text.includes('Your answer is CORRECT'));
     });
   });
 });

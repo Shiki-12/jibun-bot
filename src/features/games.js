@@ -15,16 +15,16 @@ import {
 } from '../core/games.js';
 
 const SUIT_EMOJI = {
-  batu: 'Batu',
-  gunting: 'Gunting',
-  kertas: 'Kertas',
+  batu: 'Rock',
+  gunting: 'Scissors',
+  kertas: 'Paper',
 };
 
 function buildSuitKeyboard() {
   return new InlineKeyboard()
-    .text('Batu', 'suit:batu')
-    .text('Gunting', 'suit:gunting')
-    .text('Kertas', 'suit:kertas');
+    .text('Rock', 'suit:batu')
+    .text('Scissors', 'suit:gunting')
+    .text('Paper', 'suit:kertas');
 }
 
 function buildQuizKeyboard(question) {
@@ -42,19 +42,19 @@ export default {
   commands: [
     {
       name: 'suit',
-      description: 'Main suit (batu-gunting-kertas) lawan bot',
+      description: 'Play rock-paper-scissors against the bot',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const prompt =
           p.strings?.suitPrompt ??
-          'Ayo main suit! Pilih batu, gunting, atau kertas:';
+          "Let's play rock-paper-scissors! Choose rock, paper, or scissors:";
         await ctx.reply(prompt, { reply_markup: buildSuitKeyboard() });
       },
     },
 
     {
       name: 'tebak',
-      description: 'Tebak angka rahasia 1-100 (misal: /tebak 45)',
+      description: 'Guess secret number 1-100 (e.g., /tebak 45)',
       handler: async (ctx) => {
         const chatId = ctx.chat.id;
         const userId = ctx.from?.id;
@@ -67,7 +67,7 @@ export default {
           const existing = getTebakGame(chatId);
           if (existing) {
             await ctx.reply(
-              `Permainan tebak angka sedang berjalan!\nSisa kesempatan: *${existing.attemptsLeft}/${existing.maxAttempts}*.\nTebak dengan: \`/tebak <angka>\``,
+              `Number guessing game in progress!\nRemaining attempts: *${existing.attemptsLeft}/${existing.maxAttempts}*.\nGuess with: \`/tebak <number>\``,
               { parse_mode: 'Markdown' },
             );
             return;
@@ -76,14 +76,14 @@ export default {
           startTebakGame(chatId);
           const startMsg =
             p.strings?.tebakStart ??
-            'Aku sudah memilih angka rahasia antara 1 sampai 100! Kamu punya 7 kesempatan. Tebak dengan: `/tebak <angka>`';
+            'I picked a secret number between 1 and 100! You have 7 attempts. Guess with: `/tebak <number>`';
           await ctx.reply(startMsg, { parse_mode: 'Markdown' });
           return;
         }
 
         const guessNum = parseInt(arg, 10);
         if (isNaN(guessNum) || guessNum < 1 || guessNum > 100) {
-          await ctx.reply('Masukkan angka bulat antara 1 sampai 100! Contoh: `/tebak 50`', {
+          await ctx.reply('Enter a whole number between 1 and 100! Example: `/tebak 50`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -99,7 +99,7 @@ export default {
           if (userId) recordGameResult({ userId, chatId, result: 'win' });
           const winMsg =
             p.strings?.tebakWin?.replace('{target}', res.target) ??
-            `Selamat! Tebakanmu benar di angka *${res.target}*! (+3 poin)`;
+            `Congratulations! Your guess of *${res.target}* is correct! (+3 points)`;
           await ctx.reply(winMsg, { parse_mode: 'Markdown' });
           return;
         }
@@ -108,7 +108,7 @@ export default {
           if (userId) recordGameResult({ userId, chatId, result: 'loss' });
           const lossMsg =
             p.strings?.tebakGameOver?.replace('{target}', res.target) ??
-            `Kesempatanmu habis! Angka rahasianya adalah *${res.target}*. (+0 poin)`;
+            `Out of attempts! The secret number was *${res.target}*. (+0 points)`;
           await ctx.reply(lossMsg, { parse_mode: 'Markdown' });
           return;
         }
@@ -116,7 +116,7 @@ export default {
         if (res.status === 'too_high') {
           const highMsg =
             p.strings?.tebakTooHigh?.replace('{attempts}', res.attemptsLeft) ??
-            `Terlalu besar! Sisa ${res.attemptsLeft} kesempatan.`;
+            `Too high! ${res.attemptsLeft} attempts remaining.`;
           await ctx.reply(highMsg);
           return;
         }
@@ -124,7 +124,7 @@ export default {
         if (res.status === 'too_low') {
           const lowMsg =
             p.strings?.tebakTooLow?.replace('{attempts}', res.attemptsLeft) ??
-            `Terlalu kecil! Sisa ${res.attemptsLeft} kesempatan.`;
+            `Too low! ${res.attemptsLeft} attempts remaining.`;
           await ctx.reply(lowMsg);
           return;
         }
@@ -133,11 +133,11 @@ export default {
 
     {
       name: 'quiz',
-      description: 'Kuis trivia pilihan ganda',
+      description: 'Multiple choice trivia quiz',
       handler: async (ctx) => {
         const question = getRandomQuizQuestion();
         if (!question) {
-          await ctx.reply('Bank soal kuis belum tersedia.');
+          await ctx.reply('Trivia quiz bank is not available.');
           return;
         }
 
@@ -146,7 +146,7 @@ export default {
           .map((opt, i) => `${letters[i]}. ${opt}`)
           .join('\n');
 
-        const text = `*Kuis Trivia*\n\n*${question.question}*\n\n${optionsList}`;
+        const text = `*Trivia Quiz*\n\n*${question.question}*\n\n${optionsList}`;
         await ctx.reply(text, {
           parse_mode: 'Markdown',
           reply_markup: buildQuizKeyboard(question),
@@ -156,17 +156,17 @@ export default {
 
     {
       name: 'truth',
-      description: 'Tantangan kejujuran (Truth)',
+      description: 'Truth challenge',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const list = Array.isArray(p.strings?.truth) && p.strings.truth.length > 0
           ? p.strings.truth
           : [
-              'Hal paling memalukan apa yang pernah kamu alami?',
-              'Kapan terakhir kali kamu berbohong dan untuk apa?',
+              'What is the most embarrassing thing that ever happened to you?',
+              'When was the last time you lied, and what was it about?',
             ];
         const item = list[Math.floor(Math.random() * list.length)];
-        await ctx.reply(`*Truth:*\n"${item}"\n\n_Jawab jujur ya!_`, {
+        await ctx.reply(`*Truth:*\n"${item}"\n\n_Answer honestly!_`, {
           parse_mode: 'Markdown',
         });
       },
@@ -174,17 +174,17 @@ export default {
 
     {
       name: 'dare',
-      description: 'Tantangan keberanian (Dare)',
+      description: 'Dare challenge',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const list = Array.isArray(p.strings?.dare) && p.strings.dare.length > 0
           ? p.strings.dare
           : [
-              'Kirim stiker lucu ke chat teratasmu sekarang!',
-              'Minum segelas air putih sekarang!',
+              'Send a funny sticker to your top chat right now!',
+              'Drink a full glass of water right now!',
             ];
         const item = list[Math.floor(Math.random() * list.length)];
-        await ctx.reply(`*Dare:*\n"${item}"\n\n_Lakukan sekarang, jangan kabur!_`, {
+        await ctx.reply(`*Dare:*\n"${item}"\n\n_Do it now, do not back out!_`, {
           parse_mode: 'Markdown',
         });
       },
@@ -192,26 +192,26 @@ export default {
 
     {
       name: 'pilih',
-      description: 'Bantu pilihkan opsi (misal: /pilih kopi, teh, susu)',
+      description: 'Help choose between options (e.g., /pilih coffee, tea, milk)',
       handler: async (ctx) => {
         const text = ctx.message?.text ?? '';
         const rawArg = text.replace(/^\/pilih(@\w+)?/i, '').trim();
 
         if (!rawArg) {
-          await ctx.reply('Format salah! Contoh: `/pilih kopi, teh, susu` atau `/pilih mie ayam atau bakso`', {
+          await ctx.reply('Invalid format! Example: `/pilih coffee, tea, milk` or `/pilih pizza or pasta`', {
             parse_mode: 'Markdown',
           });
           return;
         }
 
-        const delimiter = rawArg.includes(' atau ') ? /\s+atau\s+/i : /,/;
+        const delimiter = rawArg.includes(' or ') || rawArg.includes(' atau ') ? /\s+(?:or|atau)\s+/i : /,/;
         const options = rawArg
           .split(delimiter)
           .map((s) => s.trim())
           .filter(Boolean);
 
         if (options.length < 2) {
-          await ctx.reply('Berikan minimal 2 pilihan! Contoh: `/pilih nonton, tidur`', {
+          await ctx.reply('Provide at least 2 options! Example: `/pilih movie, sleep`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -221,7 +221,7 @@ export default {
         const p = ctx.persona ?? { strings: {} };
         const replyText =
           p.strings?.pickChoice?.replace('{choice}', choice) ??
-          `Aku pilihkan: *${choice}*!`;
+          `I pick: *${choice}*!`;
 
         await ctx.reply(replyText, { parse_mode: 'Markdown' });
       },
@@ -229,10 +229,10 @@ export default {
 
     {
       name: 'dadu',
-      description: 'Lempar dadu acak 1-6',
+      description: 'Roll a random 6-sided dice',
       handler: async (ctx) => {
         const roll = rollDice();
-        await ctx.reply(`*Hasil Lemparan Dadu:* [ *${roll}* ]`, {
+        await ctx.reply(`*Dice Roll Result:* [ *${roll}* ]`, {
           parse_mode: 'Markdown',
         });
       },
@@ -240,10 +240,10 @@ export default {
 
     {
       name: 'koin',
-      description: 'Lempar koin (Gambar / Angka)',
+      description: 'Flip a coin (Heads / Tails)',
       handler: async (ctx) => {
         const flip = flipCoin();
-        await ctx.reply(`*Hasil Lemparan Koin:* [ *${flip}* ]`, {
+        await ctx.reply(`*Coin Flip Result:* [ *${flip}* ]`, {
           parse_mode: 'Markdown',
         });
       },
@@ -251,7 +251,7 @@ export default {
 
     {
       name: 'skor',
-      description: 'Lihat papan skor game di chat ini',
+      description: 'View game leaderboard in this chat',
       handler: async (ctx) => {
         const chatId = ctx.chat.id;
         const userId = ctx.from?.id;
@@ -259,23 +259,23 @@ export default {
 
         if (rows.length === 0) {
           await ctx.reply(
-            'Belum ada skor tercatat di chat ini.\nMainkan /suit, /tebak, atau /quiz untuk mulai mengumpulkan poin!',
+            'No scores recorded in this chat yet.\nPlay /suit, /tebak, or /quiz to start earning points!',
           );
           return;
         }
 
         const medals = ['1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.', '10.'];
         const listText = rows
-          .map((r, i) => `${medals[i] || `${i + 1}.`} *${r.first_name}*: *${r.points}* poin (${r.wins}M / ${r.draws}S / ${r.losses}K)`)
+          .map((r, i) => `${medals[i] || `${i + 1}.`} *${r.first_name}*: *${r.points}* points (${r.wins}W / ${r.draws}D / ${r.losses}L)`)
           .join('\n');
 
         let footer = '';
         if (userId) {
           const myScore = getUserScore(userId, chatId);
-          footer = `\n\n*Skormu:* *${myScore.points}* poin (${myScore.wins} Menang / ${myScore.draws} Seri / ${myScore.losses} Kalah)`;
+          footer = `\n\n*Your Score:* *${myScore.points}* points (${myScore.wins} Wins / ${myScore.draws} Draws / ${myScore.losses} Losses)`;
         }
 
-        const response = `*Papan Skor Game*\n\n${listText}${footer}`;
+        const response = `*Game Leaderboard*\n\n${listText}${footer}`;
         await ctx.reply(response, { parse_mode: 'Markdown' });
       },
     },
@@ -292,7 +292,7 @@ export default {
           const p = ctx.persona ?? { strings: {} };
           const prompt =
             p.strings?.suitPrompt ??
-            'Ayo main suit lagi! Pilih batu, gunting, atau kertas:';
+            "Let's play rock-paper-scissors again! Choose rock, paper, or scissors:";
           await ctx.editMessageText(prompt, { reply_markup: buildSuitKeyboard() });
           await ctx.answerCallbackQuery().catch(() => {});
           return;
@@ -302,7 +302,7 @@ export default {
         try {
           playRes = playSuit(choice);
         } catch {
-          await ctx.answerCallbackQuery({ text: 'Pilihan tidak valid!' });
+          await ctx.answerCallbackQuery({ text: 'Invalid choice!' });
           return;
         }
 
@@ -315,23 +315,23 @@ export default {
         const p = ctx.persona ?? { strings: {} };
         let comment = '';
         if (playRes.result === 'win') {
-          comment = p.strings?.suitWin ?? 'Kamu menang! (+3 poin)';
+          comment = p.strings?.suitWin ?? 'You won! (+3 points)';
         } else if (playRes.result === 'loss') {
-          comment = p.strings?.suitLoss ?? 'Kamu kalah! (+0 poin)';
+          comment = p.strings?.suitLoss ?? 'You lost! (+0 points)';
         } else {
-          comment = p.strings?.suitDraw ?? 'Hasil seri! (+1 poin)';
+          comment = p.strings?.suitDraw ?? "It's a draw! (+1 point)";
         }
 
         const uEmoji = SUIT_EMOJI[playRes.userChoice] || playRes.userChoice;
         const bEmoji = SUIT_EMOJI[playRes.botChoice] || playRes.botChoice;
 
         const resultText =
-          `*Hasil Suit*\n\n` +
-          `• Kamu: ${uEmoji}\n` +
+          `*Rock Paper Scissors Result*\n\n` +
+          `• You: ${uEmoji}\n` +
           `• Bot: ${bEmoji}\n\n` +
           `${comment}`;
 
-        const againKb = new InlineKeyboard().text('Main Lagi', 'suit:again');
+        const againKb = new InlineKeyboard().text('Play Again', 'suit:again');
         await ctx.editMessageText(resultText, {
           parse_mode: 'Markdown',
           reply_markup: againKb,
@@ -349,14 +349,14 @@ export default {
         if (parts[0] === 'next') {
           const question = getRandomQuizQuestion();
           if (!question) {
-            await ctx.answerCallbackQuery({ text: 'Soal belum tersedia.' });
+            await ctx.answerCallbackQuery({ text: 'No questions available.' });
             return;
           }
           const letters = ['A', 'B', 'C', 'D'];
           const optionsList = question.options
             .map((opt, i) => `${letters[i]}. ${opt}`)
             .join('\n');
-          const text = `*Kuis Trivia*\n\n*${question.question}*\n\n${optionsList}`;
+          const text = `*Trivia Quiz*\n\n*${question.question}*\n\n${optionsList}`;
           await ctx.editMessageText(text, {
             parse_mode: 'Markdown',
             reply_markup: buildQuizKeyboard(question),
@@ -370,7 +370,7 @@ export default {
         const check = checkQuizAnswer(qId, optIdx);
 
         if (!check) {
-          await ctx.answerCallbackQuery({ text: 'Soal tidak ditemukan.' });
+          await ctx.answerCallbackQuery({ text: 'Question not found.' });
           return;
         }
 
@@ -387,19 +387,19 @@ export default {
         let resultMsg = '';
         if (check.correct) {
           resultMsg =
-            `*Jawabanmu BENAR!* (+3 poin)\n\n` +
-            `*Pertanyaan:* ${check.question.question}\n` +
-            `*Jawaban:* ${check.correctText}\n\n` +
+            `*Your answer is CORRECT!* (+3 points)\n\n` +
+            `*Question:* ${check.question.question}\n` +
+            `*Answer:* ${check.correctText}\n\n` +
             `_${check.explanation}_`;
         } else {
           resultMsg =
-            `*Jawabanmu SALAH!*\n\n` +
-            `*Pertanyaan:* ${check.question.question}\n` +
-            `*Jawaban yang benar:* ${check.correctText}\n\n` +
+            `*Your answer is WRONG!*\n\n` +
+            `*Question:* ${check.question.question}\n` +
+            `*Correct answer:* ${check.correctText}\n\n` +
             `_${check.explanation}_`;
         }
 
-        const nextKb = new InlineKeyboard().text('Soal Berikutnya', 'quiz:next');
+        const nextKb = new InlineKeyboard().text('Next Question', 'quiz:next');
         await ctx.editMessageText(resultMsg, {
           parse_mode: 'Markdown',
           reply_markup: nextKb,

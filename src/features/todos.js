@@ -68,12 +68,12 @@ export function deleteTodo(todoId) {
 export function renderTodoList(todos, tz = 'Asia/Jakarta') {
   if (todos.length === 0) {
     return {
-      text: 'To-do list kamu kosong melompong. Santai banget ya! (¬_¬)',
+      text: 'Your to-do list is empty. Nothing to do right now. (¬_¬)',
       keyboard: null,
     };
   }
 
-  const lines = ['*Daftar To-Do:*', ''];
+  const lines = ['*To-Do List:*', ''];
   const keyboard = new InlineKeyboard();
 
   todos.forEach((todo, idx) => {
@@ -83,8 +83,8 @@ export function renderTodoList(todos, tz = 'Asia/Jakarta') {
       : '';
     lines.push(`*${num}.* ${todo.text}${dueInfo}`);
     keyboard
-      .text(`#${num} Selesai`, `todo:done:${todo.id}`)
-      .text(`Hapus`, `todo:del:${todo.id}`)
+      .text(`#${num} Done`, `todo:done:${todo.id}`)
+      .text(`Delete`, `todo:del:${todo.id}`)
       .row();
   });
 
@@ -97,7 +97,7 @@ export default {
   commands: [
     {
       name: 'todo',
-      description: 'Tambah to-do (/todo beli beras @besok) atau tampilkan daftar (/todo)',
+      description: 'Add to-do (/todo buy groceries @tomorrow) or view list (/todo)',
       handler: async (ctx) => {
         const rawArgs = ctx.message.text.split(/\s+/).slice(1).join(' ').trim();
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
@@ -140,23 +140,23 @@ export default {
               });
             } catch (err) {
               // Jika parse @ gagal, anggap seluruh teks sebagai teks to-do biasa
-              console.warn('Gagal parse @waktu to-do:', err.message);
+              console.warn('Failed parsing @time for to-do:', err.message);
             }
           }
         }
 
         insertTodo({ userId: ctx.from.id, text: todoText, dueAt });
 
-        let confirmMsg = `To-do dicatat: *"${todoText}"*`;
+        let confirmMsg = `To-do recorded: *"${todoText}"*`;
         if (dueAt) {
-          confirmMsg += `\n_(Pengingat diatur untuk ${formatReminderTime(dueAt, tz)})_`;
+          confirmMsg += `\n_(Reminder set for ${formatReminderTime(dueAt, tz)})_`;
         }
 
         const template = p.strings?.todoAdded;
         if (template) {
           confirmMsg = template.replace('{text}', todoText);
           if (dueAt) {
-            confirmMsg += `\n_(Pengingat: ${formatReminderTime(dueAt, tz)})_`;
+            confirmMsg += `\n_(Reminder: ${formatReminderTime(dueAt, tz)})_`;
           }
         }
 
@@ -165,7 +165,7 @@ export default {
     },
     {
       name: 'list',
-      description: 'Tampilkan daftar to-do aktif dengan tombol centang',
+      description: 'Show active to-do list with interactive action buttons',
       handler: async (ctx) => {
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
         const todos = getActiveUserTodos(ctx.from.id);
@@ -179,14 +179,14 @@ export default {
     },
     {
       name: 'done',
-      description: 'Tandai to-do selesai berdasarkan nomor urut (contoh: /done 1)',
+      description: 'Mark to-do as completed by number (example: /done 1)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
         const num = Number(args[0]);
 
         if (!num || isNaN(num)) {
-          await ctx.reply('Sebutkan nomor urut to-do yang selesai. Contoh: `/done 1`', {
+          await ctx.reply('Specify the item number of the completed to-do. Example: `/done 1`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -196,7 +196,7 @@ export default {
         if (!match) {
           await ctx.reply(
             p.strings?.todoNotFound ??
-              `To-do nomor ${num} tidak ditemukan. Cek nomornya di /list.`,
+              `To-do item #${num} not found. Check active items in /list.`,
           );
           return;
         }
@@ -205,20 +205,20 @@ export default {
 
         const doneMsg =
           p.strings?.todoDone?.replace('{text}', match.todo.text) ??
-          `To-do *"${match.todo.text}"* selesai! Bagus deh.`;
+          `To-do *"${match.todo.text}"* completed.`;
         await ctx.reply(doneMsg, { parse_mode: 'Markdown' });
       },
     },
     {
       name: 'deltodo',
-      description: 'Hapus to-do berdasarkan nomor urut (contoh: /deltodo 2)',
+      description: 'Delete to-do by number (example: /deltodo 2)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
         const num = Number(args[0]);
 
         if (!num || isNaN(num)) {
-          await ctx.reply('Sebutkan nomor to-do yang ingin dihapus. Contoh: `/deltodo 1`', {
+          await ctx.reply('Specify the item number of the to-do to delete. Example: `/deltodo 1`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -226,7 +226,7 @@ export default {
 
         const match = getTodoByNumber(ctx.from.id, num);
         if (!match) {
-          await ctx.reply(`To-do nomor ${num} tidak ditemukan.`);
+          await ctx.reply(`To-do item #${num} not found.`);
           return;
         }
 
@@ -234,7 +234,7 @@ export default {
 
         const delMsg =
           p.strings?.todoDeleted?.replace('{num}', num) ??
-          `To-do #${num} *"${match.todo.text}"* berhasil dihapus.`;
+          `To-do #${num} *"${match.todo.text}"* successfully deleted.`;
         await ctx.reply(delMsg, { parse_mode: 'Markdown' });
       },
     },
@@ -247,7 +247,7 @@ export default {
       maxArgs: 1,
       maxArgLength: 300,
       promptHint:
-        'Tambah tugas ke to-do list. Format: [TODO_ADD: teks tugas @opsional_waktu]. Contoh: [TODO_ADD: beli susu @besok 07:00]',
+        'Add item to to-do list. Format: [TODO_ADD: task text @optional_time]. Example: [TODO_ADD: buy groceries @tomorrow 07:00]',
       handle: async (ctx, [rawText]) => {
         const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
         let todoText = rawText;
@@ -276,7 +276,7 @@ export default {
 
         insertTodo({ userId: ctx.from.id, text: todoText, dueAt });
         const timeStr = dueAt ? ` (@ ${formatReminderTime(dueAt, tz)})` : '';
-        await ctx.reply(`*To-do Ditambahkan:*\n"${todoText}"${timeStr}`, {
+        await ctx.reply(`*To-Do Added:*\n"${todoText}"${timeStr}`, {
           parse_mode: 'Markdown',
         });
       },
@@ -287,7 +287,7 @@ export default {
       maxArgs: 1,
       maxArgLength: 100,
       promptHint:
-        'Tandai to-do selesai dengan nomor atau kata kunci. Format: [TODO_DONE: nomor_atau_kata_kunci]. Contoh: [TODO_DONE: 1] atau [TODO_DONE: beli beras]',
+        'Mark to-do completed by number or keyword. Format: [TODO_DONE: number_or_keyword]. Example: [TODO_DONE: 1] or [TODO_DONE: buy groceries]',
       handle: async (ctx, [query]) => {
         const p = getPersona(ctx);
         const cleanQuery = query.trim();
@@ -295,7 +295,7 @@ export default {
 
         if (activeTodos.length === 0) {
           await ctx.reply(
-            p.strings?.todoEmpty ?? 'To-do list kamu sudah kosong.',
+            p.strings?.todoEmpty ?? 'Your to-do list is already empty.',
           );
           return;
         }
@@ -305,7 +305,7 @@ export default {
         if (!isNaN(num) && num >= 1 && num <= activeTodos.length) {
           const item = activeTodos[num - 1];
           markTodoDone(item.id);
-          await ctx.reply(`To-do *"${item.text}"* selesai!`, {
+          await ctx.reply(`To-do *"${item.text}"* completed!`, {
             parse_mode: 'Markdown',
           });
           return;
@@ -319,7 +319,7 @@ export default {
         if (matches.length === 1) {
           const item = matches[0];
           markTodoDone(item.id);
-          await ctx.reply(`To-do *"${item.text}"* selesai!`, {
+          await ctx.reply(`To-do *"${item.text}"* completed!`, {
             parse_mode: 'Markdown',
           });
         } else if (matches.length > 1) {
@@ -330,11 +330,11 @@ export default {
             })
             .join('\n');
           await ctx.reply(
-            `Ada beberapa to-do yang cocok dengan "${cleanQuery}", pilih yang mana:\n${listStr}`,
+            `Multiple to-do items matched "${cleanQuery}", choose one:\n${listStr}`,
           );
         } else {
           await ctx.reply(
-            `Tidak ditemukan to-do yang cocok dengan kata kunci "${cleanQuery}".`,
+            `No to-do items matched keyword "${cleanQuery}".`,
           );
         }
       },
@@ -354,10 +354,10 @@ export default {
 
         if (action === 'done') {
           markTodoDone(todoId);
-          await ctx.answerCallbackQuery({ text: 'To-do selesai!' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'To-do completed!' }).catch(() => {});
         } else if (action === 'del') {
           deleteTodo(todoId);
-          await ctx.answerCallbackQuery({ text: 'To-do dihapus.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'To-do deleted.' }).catch(() => {});
         }
 
         // Perbarui tampilan daftar setelah perubahan

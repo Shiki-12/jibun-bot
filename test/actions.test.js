@@ -131,10 +131,10 @@ describe('Generic Action Tags & Prompt Context (F-03)', () => {
     const fixedDate = new Date('2026-11-04T13:12:00.000Z'); // 20:12 WIB
     const formatted = formatNowContext(ctx, fixedDate);
 
-    assert.ok(formatted.includes('Sekarang:'));
+    assert.ok(formatted.includes('Current time:'));
     assert.ok(formatted.includes('20:12') || formatted.includes('20.12'));
     assert.ok(formatted.includes('Asia/Jakarta'));
-    assert.ok(formatted.includes('Nama user: Budi'));
+    assert.ok(formatted.includes('User name: Budi'));
   });
 
   it('buildSystemPrompt menggabungkan petunjuk tag aktif dan konteks waktu', () => {
@@ -154,12 +154,12 @@ describe('Generic Action Tags & Prompt Context (F-03)', () => {
     });
 
     assert.ok(finalPrompt.includes('Kamu Mika si tsundere.'));
-    assert.ok(finalPrompt.includes('## Tag Aksi Tersedia'));
+    assert.ok(finalPrompt.includes('## Available Action Tags'));
     assert.ok(finalPrompt.includes('- [GIF: ...]: Kirim animasi GIF reaksi'));
     assert.ok(finalPrompt.includes('- [REMIND: ...]: Set pengingat waktu'));
-    assert.ok(finalPrompt.includes('## Konteks Saat Ini'));
-    assert.ok(finalPrompt.includes('Sekarang:'));
-    assert.ok(finalPrompt.includes('Nama user: Dewi'));
+    assert.ok(finalPrompt.includes('## Current Context'));
+    assert.ok(finalPrompt.includes('Current time:'));
+    assert.ok(finalPrompt.includes('User name: Dewi'));
   });
 });
 

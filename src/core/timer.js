@@ -8,28 +8,28 @@ import { getZonedParts } from './time_parser.js';
 
 /**
  * Parse string durasi menjadi milidetik.
- * Mendukung format: 25m, 10menit, 30s, 45detik, 2j, 1jam, 1j30m, atau angka polos (default menit).
+ * Mendukung format: 25m, 10menit, 30s, 45detik, 2j, 1jam, 1j30m, 2h, 1hour, atau angka polos (default menit).
  */
 export function parseTimerDuration(str) {
   if (!str || typeof str !== 'string') {
-    throw new Error('Durasi timer tidak boleh kosong.');
+    throw new Error('Timer duration cannot be empty.');
   }
 
   const clean = str.trim().toLowerCase();
   if (clean.includes('-')) {
-    throw new Error('Durasi tidak boleh negatif.');
+    throw new Error('Duration cannot be negative.');
   }
 
   // Jika hanya angka polos, anggap menit (misal "25" -> 25 menit)
   if (/^\d+$/.test(clean)) {
     const mins = parseInt(clean, 10);
-    if (mins <= 0) throw new Error('Durasi harus lebih dari 0.');
-    if (mins > 24 * 60) throw new Error('Durasi timer maksimal 24 jam.');
+    if (mins <= 0) throw new Error('Duration must be greater than 0.');
+    if (mins > 24 * 60) throw new Error('Maximum timer duration is 24 hours.');
     return mins * 60_000;
   }
 
   let totalMs = 0;
-  const regex = /(\d+)\s*(jam|j|h|menit|m|min|detik|d|s|sec)/gi;
+  const regex = /(\d+)\s*(hours?|hour|jam|j|h|minutes?|minute|mins?|menit|m|seconds?|second|secs?|detik|d|s)/gi;
   let match;
   let matchFound = false;
 
@@ -38,34 +38,34 @@ export function parseTimerDuration(str) {
     const val = parseInt(match[1], 10);
     const unit = match[2].toLowerCase();
 
-    if (['jam', 'j', 'h'].includes(unit)) {
+    if (['hours', 'hour', 'jam', 'j', 'h'].includes(unit)) {
       totalMs += val * 3600_000;
-    } else if (['menit', 'm', 'min'].includes(unit)) {
+    } else if (['minutes', 'minute', 'mins', 'min', 'menit', 'm'].includes(unit)) {
       totalMs += val * 60_000;
-    } else if (['detik', 'd', 's', 'sec'].includes(unit)) {
+    } else if (['seconds', 'second', 'secs', 'sec', 'detik', 'd', 's'].includes(unit)) {
       totalMs += val * 1000;
     }
   }
 
   if (!matchFound || totalMs <= 0) {
     throw new Error(
-      `Format durasi '${str}' tidak valid. Gunakan format seperti: 25m, 30s, 1j 30m.`,
+      `Invalid duration format '${str}'. Use format like: 25m, 30s, 1h 30m.`,
     );
   }
 
   // Batas wajar timer: maksimal 24 jam
   if (totalMs > 24 * 3600_000) {
-    throw new Error('Durasi timer maksimal 24 jam.');
+    throw new Error('Maximum timer duration is 24 hours.');
   }
 
   return totalMs;
 }
 
 /**
- * Format milidetik ke teks yang mudah dibaca dalam bahasa Indonesia.
+ * Format milliseconds to clean human-readable English text.
  */
 export function formatDuration(ms) {
-  if (ms <= 0) return '0 detik';
+  if (ms <= 0) return '0 seconds';
 
   const totalSec = Math.round(ms / 1000);
   const hours = Math.floor(totalSec / 3600);
@@ -73,11 +73,11 @@ export function formatDuration(ms) {
   const secs = totalSec % 60;
 
   const parts = [];
-  if (hours > 0) parts.push(`${hours} jam`);
-  if (mins > 0) parts.push(`${mins} menit`);
-  if (secs > 0 && hours === 0) parts.push(`${secs} detik`);
+  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+  if (mins > 0) parts.push(`${mins} ${mins === 1 ? 'minute' : 'minutes'}`);
+  if (secs > 0 && hours === 0) parts.push(`${secs} ${secs === 1 ? 'second' : 'seconds'}`);
 
-  return parts.join(' ') || '0 detik';
+  return parts.join(' ') || '0 seconds';
 }
 
 /**
@@ -98,14 +98,14 @@ export function createTimer({
   chatId,
   userId,
   durationMs,
-  label = 'Waktu habis!',
+  label = 'Time is up!',
   tz = 'Asia/Jakarta',
   now = Date.now(),
 }) {
   const db = getDb();
   const dueAt = now + durationMs;
-  const cleanLabel = (label || 'Waktu habis!').trim();
-  const reminderText = `[Timer] *Timer Selesai:* ${cleanLabel}`;
+  const cleanLabel = (label || 'Time is up!').trim();
+  const reminderText = `[Timer] *Timer Finished:* ${cleanLabel}`;
 
   const res = db
     .prepare(
@@ -144,7 +144,7 @@ export function getActiveTimers(chatId, userId = null) {
   return rows.map((r) => ({
     id: r.id,
     userId: r.user_id,
-    label: r.text.replace(/^\[Timer\]\s*\*Timer Selesai:\*\s*/, ''),
+    label: r.text.replace(/^\[Timer\]\s*\*(?:Timer Finished|Timer Selesai):\*\s*/, ''),
     dueAt: r.due_at,
     remainingMs: Math.max(0, r.due_at - Date.now()),
   }));
@@ -221,20 +221,20 @@ export function startPomodoro({
   const c = parseInt(cycles, 10);
 
   if (isNaN(w) || w < 1 || w > 180) {
-    throw new Error('Durasi fokus (work) harus antara 1 sampai 180 menit.');
+    throw new Error('Focus (work) duration must be between 1 and 180 minutes.');
   }
   if (isNaN(b) || b < 1 || b > 60) {
-    throw new Error('Durasi istirahat (break) harus antara 1 sampai 60 menit.');
+    throw new Error('Break duration must be between 1 and 60 minutes.');
   }
   if (isNaN(c) || c < 1 || c > 12) {
-    throw new Error('Jumlah siklus Pomodoro harus antara 1 sampai 12 siklus.');
+    throw new Error('Number of Pomodoro cycles must be between 1 and 12.');
   }
 
   // Pastikan tidak ada pomodoro yang sedang aktif di chat ini
   const existing = getActivePomodoro(chatId);
   if (existing) {
     throw new Error(
-      `Sesi Pomodoro sudah berjalan di chat ini (Siklus ${existing.cycle}/${existing.totalCycles}, tahap ${existing.phase === 'work' ? 'Fokus' : 'Istirahat'}). Ketik /stop untuk membatalkan terlebih dahulu.`,
+      `Pomodoro session already running in this chat (Cycle ${existing.cycle}/${existing.totalCycles}, phase ${existing.phase === 'work' ? 'Focus' : 'Break'}). Type /stop to cancel first.`,
     );
   }
 
@@ -243,8 +243,8 @@ export function startPomodoro({
   const repeatKey = `pomodoro:work:1:${c}:${w}:${b}`;
   const text =
     c === 1
-      ? `[Pomodoro Selesai] *Waktu Fokus Selesai!* Siklus 1/1 selesai. *Sesi Pomodoro Selesai!* Hebat! Kamu telah menyelesaikan seluruh 1 siklus fokus. Istirahatlah yang cukup!`
-      : `[Pomodoro Istirahat] *Waktu Fokus Selesai!* Siklus 1/${c} selesai. Waktunya istirahat ${b} menit.`;
+      ? `[Pomodoro Finished] *Focus Time Completed!* Cycle 1/1 finished. *Pomodoro Session Completed!* Great job! You finished all 1 focus cycles. Enjoy your rest!`
+      : `[Pomodoro Break] *Focus Time Completed!* Cycle 1/${c} finished. Time for a ${b}-minute break.`;
 
   const res = db
     .prepare(
@@ -304,7 +304,7 @@ export function advancePomodoro(reminder, now = Date.now()) {
       const nextDue = now + breakMin * 60_000;
       const nextCycle = cycle + 1;
       const nextRepeat = `pomodoro:break:${nextCycle}:${totalCycles}:${workMin}:${breakMin}`;
-      const nextText = `[Pomodoro Fokus] *Waktu Istirahat Selesai!* Waktunya kembali fokus untuk Siklus ${nextCycle}/${totalCycles} (${workMin} menit).`;
+      const nextText = `[Pomodoro Focus] *Break Time Completed!* Time to focus again for Cycle ${nextCycle}/${totalCycles} (${workMin} minutes).`;
 
       const res = db
         .prepare(
@@ -334,8 +334,8 @@ export function advancePomodoro(reminder, now = Date.now()) {
     const nextRepeat = `pomodoro:work:${cycle}:${totalCycles}:${workMin}:${breakMin}`;
     const isLast = cycle === totalCycles;
     const nextText = isLast
-      ? `[Pomodoro Selesai] *Waktu Fokus Selesai!* Siklus ${cycle}/${totalCycles} selesai. *Sesi Pomodoro Selesai!* Hebat! Kamu telah menyelesaikan seluruh ${totalCycles} siklus fokus hari ini. Istirahatlah yang cukup!`
-      : `[Pomodoro Istirahat] *Waktu Fokus Selesai!* Siklus ${cycle}/${totalCycles} selesai. Waktunya istirahat ${breakMin} menit.`;
+      ? `[Pomodoro Finished] *Focus Time Completed!* Cycle ${cycle}/${totalCycles} finished. *Pomodoro Session Completed!* Great job! You completed all ${totalCycles} focus cycles today. Enjoy your rest!`
+      : `[Pomodoro Break] *Focus Time Completed!* Cycle ${cycle}/${totalCycles} finished. Time for a ${breakMin}-minute break.`;
 
     const res = db
       .prepare(

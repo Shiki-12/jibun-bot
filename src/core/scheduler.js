@@ -15,7 +15,7 @@ let isRunning = false;
 /**
  * Buat inline keyboard untuk pesan pengingat yang tiba.
  */
-export function buildReminderKeyboard(reminderId, isEn = false) {
+export function buildReminderKeyboard(reminderId, isEn = true) {
   return new InlineKeyboard()
     .text(isEn ? 'Snooze 10m' : 'Tunda 10m', `rem:snz10:${reminderId}`)
     .text(isEn ? 'Snooze 1h' : 'Tunda 1j', `rem:snz60:${reminderId}`)
@@ -59,6 +59,7 @@ export async function processPendingReminders(bot, now = Date.now()) {
 
     // 3. Susun teks pesan
     const isSpecial =
+      reminder.text.startsWith('[Prayer]') ||
       reminder.text.startsWith('[Sholat]') ||
       reminder.text.startsWith('[Timer]') ||
       reminder.text.startsWith('[Pomodoro') ||
@@ -82,17 +83,17 @@ export async function processPendingReminders(bot, now = Date.now()) {
         persona = { strings: {} };
       }
 
-      isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
+      isEn = persona?.language !== 'id';
 
       const template =
         persona.strings?.reminderFired ??
-        (isEn ? 'Time for: {text}. Do not ignore it.' : 'Waktunya: {text}. Jangan sampai lupa!');
+        'Time for: *{text}*. Attend to it promptly.';
       text = template.replace('{text}', reminder.text);
       keyboard = buildReminderKeyboard(reminder.id, isEn);
 
       // Jika pengingat dibuat di grup (chat_id < 0), sebut pembuatnya
       if (reminder.chat_id < 0) {
-        let name = isEn ? 'you' : 'kamu';
+        let name = 'you';
         try {
           const userRow = db
             .prepare('SELECT first_name, username FROM users WHERE id = ?')
@@ -103,16 +104,14 @@ export async function processPendingReminders(bot, now = Date.now()) {
             name = `@${userRow.username}`;
           }
         } catch {}
-        text = isEn
-          ? `*Reminder for [${name}](tg://user?id=${reminder.user_id}):*\n${text}`
-          : `*Pengingat untuk [${name}](tg://user?id=${reminder.user_id}):*\n${text}`;
+        text = `*Reminder for [${name}](tg://user?id=${reminder.user_id}):*\n${text}`;
       }
     }
 
     // Keterangan jika terlewat (misal setelah bot restart)
     const lateMinutes = Math.floor((now - reminder.due_at) / 60_000);
     if (lateMinutes >= 2) {
-      text += isEn ? `\n_(${lateMinutes} minutes late)_` : `\n_(telat ${lateMinutes} menit)_`;
+      text += `\n_(${lateMinutes} minutes late)_`;
     }
 
     // 4. Kirim pesan ke Telegram

@@ -195,21 +195,21 @@ export async function extractAndSaveFacts({
     .map((r) => `${r.role === 'user' ? 'User' : 'Bot'}: ${r.text}`)
     .join('\n');
 
-  const systemPrompt = `Kamu adalah sistem ekstraksi fakta jangka panjang.
-Tugas: Ekstrak fakta stabil dan relevan tentang User dari kutipan percakapan berikut (misalnya: nama panggilan, pekerjaan/jurusan, hobi, makanan kesukaan, hewan peliharaan, preferensi pribadi, kebiasaan, jadwal tetap).
+  const systemPrompt = `You are a long-term fact extraction system.
+Task: Extract stable and relevant facts about the User from the following conversation excerpt (e.g., nickname/name, occupation/major, hobbies, favorite food, pets, personal preferences, routines, regular schedule).
 
-ATURAN KEAMANAN & PRIVASI (MUTLAK):
-1. DILARANG KERAS menyimpan data sensitif: kata sandi/password, PIN, nomor rekening bank, kartu kredit, nomor KTP/identitas rahasia, atau informasi diagnosis medis/penyakit pribadi.
-2. HANYA ekstrak fakta yang secara eksplisit dinyatakan oleh User tentang dirinya sendiri. Jangan menebak.
-3. HANYA kembalikan JSON array of string tanpa format atau penjelasan tambahan.
-   Contoh: ["Suka minum kopi hitam tanpa gula", "Pelihara kucing bernama Mochi"]
-4. Jika tidak ada fakta stabil atau baru yang ditemukan, kembalikan: []`;
+SAFETY & PRIVACY RULES (ABSOLUTE):
+1. STRICTLY FORBIDDEN to store sensitive data: passwords, PINs, bank accounts, credit card numbers, national ID/confidential identity numbers, or personal medical diagnoses/illness details.
+2. ONLY extract facts explicitly stated by the User about themselves. Do not guess or extrapolate.
+3. ONLY return a JSON array of strings without formatting or additional explanation.
+   Example: ["Likes black coffee without sugar", "Has a pet cat named Mochi"]
+4. If no new or stable facts are found, return: []`;
 
   try {
     const raw = await generateReplyFn({
       systemPrompt,
       history: [],
-      userText: `Kutipan percakapan:\n${conversationTranscript}\n\nEkstrak fakta stabil tentang user dalam format JSON array:`,
+      userText: `Conversation excerpt:\n${conversationTranscript}\n\nExtract stable facts about the user in JSON array format:`,
     });
 
     const facts = parseFactsJson(raw);
@@ -281,17 +281,19 @@ export async function summarizeOlderHistory({
     .map((r) => `${r.role === 'user' ? 'User' : 'Bot'}: ${r.text}`)
     .join('\n');
 
+  const isEn = true;
   const existingSummary = getSummary(chatId, personaId);
-  let prompt = `Rangkum intisari percakapan lama berikut secara padat, jelas, dan objektif dalam 1-2 paragraf pendek. Sertakan topik utama dan keputusan penting yang pernah dibicarakan.`;
+  let prompt = 'Summarize the essence of this past conversation concisely and objectively in 1-2 short paragraphs in English. Include key topics and important points discussed.';
+
   if (existingSummary) {
-    prompt += `\n\nRingkasan percakapan sebelumnya:\n${existingSummary}`;
+    prompt += `\n\nPrevious conversation summary:\n${existingSummary}`;
   }
 
   try {
     const newSummary = await generateReplyFn({
-      systemPrompt: 'Kamu adalah asisten perangkum memori percakapan.',
+      systemPrompt: 'You are a conversation memory summarizer assistant. Always output summaries in English.',
       history: [],
-      userText: `${prompt}\n\nPercakapan yang perlu dirangkum:\n${oldTranscript}\n\nRingkasan padat baru:`,
+      userText: `${prompt}\n\nConversation to summarize:\n${oldTranscript}\n\nConcise English summary:`,
     });
 
     if (newSummary && newSummary.trim().length > 10) {

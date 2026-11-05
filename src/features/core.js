@@ -25,24 +25,18 @@ export default {
   commands: [
     {
       name: 'start',
-      description: 'Mulai percakapan dengan bot',
+      description: 'Start conversation with the bot',
       handler: async (ctx) => {
         const persona = resolvePersona(ctx);
         const isGroup = ctx.chat?.type && ctx.chat.type !== 'private';
-        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
         if (isGroup) {
           const botUser = ctx.me?.username ? `@${ctx.me.username}` : 'bot';
-          const groupIntro = isEn
-            ? `${persona.greeting}\n\n` +
-              '*Group Usage Information:*\n' +
-              `• The bot only responds when mentioned (${botUser}) or replied to (unless admin enables /chatty on).\n` +
-              '• The bot keeps a 200-message buffer in this group for the /rangkum_grup summary feature.\n' +
-              '• Ensure *Group Privacy* is disabled via @BotFather or promote the bot to Group Admin so it can read messages for summaries.'
-            : `${persona.greeting}\n\n` +
-              '*Informasi Penggunaan Grup:*\n' +
-              `• Bot hanya merespons jika di-mention (${botUser}) atau pesannya di-reply (kecuali admin menyalakan /chatty on).\n` +
-              '• Bot menyimpan penyangga 200 pesan teks terakhir di grup ini untuk fitur ringkasan /rangkum_grup.\n' +
-              '• Pastikan *Group Privacy* dimatikan di @BotFather atau jadikan bot Admin grup agar bot dapat membaca pesan untuk fitur ringkasan.';
+          const groupIntro =
+            `${persona.greeting}\n\n` +
+            '*Group Usage Information:*\n' +
+            `• The bot only responds when mentioned (${botUser}) or replied to (unless admin enables /chatty on).\n` +
+            '• The bot keeps a 200-message buffer in this group for the /rangkum_grup summary feature.\n' +
+            '• Ensure *Group Privacy* is disabled via @BotFather or promote the bot to Group Admin so it can read messages for summaries.';
           await ctx.reply(groupIntro, { parse_mode: 'Markdown' });
           return;
         }
@@ -51,58 +45,54 @@ export default {
     },
     {
       name: 'forget',
-      description: 'Hapus riwayat percakapan di chat ini',
+      description: 'Clear conversation history in this chat',
       handler: async (ctx) => {
         clearHistory(ctx.chat.id);
         clearSummary(ctx.chat.id);
         const persona = resolvePersona(ctx);
         const text =
           persona.strings?.forgetSuccess ??
-          'Hah, kamu mau aku lupa semuanya? ...Ya udah, terserah. Aku nggak peduli kok. (¬_¬)';
+          'Past conversation history has been cleared.';
         await ctx.reply(text);
       },
     },
     {
       name: 'about',
-      description: 'Info tentang persona dan bot',
+      description: 'Information about the bot and active persona',
       handler: async (ctx) => {
         const { persona, id, source } = getEffectivePersona(ctx);
-        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
         const meta = persona?.category === 'exclusive' ? ` [Exclusive: ${persona.source ?? 'Fan-inspired'}]` : '';
-        const text = isEn
-          ? `Active personality: ${persona.name} (${id})${meta} [source: ${source}]\nAvailable: ${listPersonalities().join(', ')}`
-          : `Personality aktif: ${persona.name} (${id})${meta} [sumber: ${source}]\nTersedia: ${listPersonalities().join(', ')}`;
+        const text = `Active personality: ${persona.name} (${id})${meta} [source: ${source}]\nAvailable: ${listPersonalities().join(', ')}`;
         await ctx.reply(text);
       },
     },
     {
       name: 'help',
-      description: 'Lihat daftar perintah yang tersedia',
+      description: 'View list of available commands',
       handler: async (ctx) => {
         const persona = resolvePersona(ctx);
         const allCommands = activeCommandsGetter();
         const userId = ctx.from?.id;
         const userIsAdmin = isAdmin(userId);
-        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
 
         const publicCommands = allCommands.filter((c) => !c.adminOnly);
         const adminCommands = allCommands.filter((c) => c.adminOnly);
 
         const header =
-          persona.strings?.helpHeader ?? (isEn ? 'List of available commands:' : 'Daftar perintah yang bisa kamu pakai:');
+          persona.strings?.helpHeader ?? 'List of available commands:';
         const footer = persona.strings?.helpFooter ?? '';
 
         const publicList = publicCommands
-          .map((c) => `/${c.name} — ${c.description || (isEn ? 'No description' : 'Tidak ada deskripsi')}`)
+          .map((c) => `/${c.name} — ${c.description || 'No description'}`)
           .join('\n');
 
         const parts = [header, '', publicList];
 
         if (userIsAdmin && adminCommands.length > 0) {
           const adminList = adminCommands
-            .map((c) => `/${c.name} — ${c.description || (isEn ? 'No description' : 'Tidak ada deskripsi')}`)
+            .map((c) => `/${c.name} — ${c.description || 'No description'}`)
             .join('\n');
-          parts.push('', isEn ? 'Admin only:' : 'Khusus admin:', adminList);
+          parts.push('', 'Admin only:', adminList);
         }
 
         if (footer) parts.push('', footer);

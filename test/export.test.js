@@ -20,7 +20,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
   await t.test('Kebijakan Privasi (getPrivacyPolicyText & /privacy)', async () => {
     const text = getPrivacyPolicyText();
     assert.ok(typeof text === 'string');
-    assert.match(text, /Kebijakan Privasi/i);
+    assert.match(text, /Privacy Policy|Kebijakan Privasi/i);
     assert.match(text, /\/export/);
     assert.match(text, /\/deleteme/);
     assert.match(text, /\/forget/);
@@ -201,7 +201,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
     const deletemeCmd = exportFeature.commands.find((c) => c.name === 'deleteme');
     await deletemeCmd.handler(ctx);
 
-    assert.match(replyText, /Peringatan Penghapusan Data Permanen/i);
+    assert.match(replyText, /Permanent Data Deletion Warning|Peringatan Penghapusan Data Permanen/i);
     assert.ok(replyOpts?.reply_markup);
 
     // Cek ada tombol konfirmasi dan batal
@@ -224,7 +224,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
       editMessageText: async () => {},
     };
     await cancelCb.handler(unauthorizedCtx);
-    assert.match(alertText, /hanya dapat dibatalkan oleh pemilik akun/i);
+    assert.match(alertText, /only be cancelled by the account owner|hanya dapat dibatalkan oleh pemilik akun/i);
 
     // 2. Berhasil jika pemilik akun
     let editedText = '';
@@ -237,7 +237,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
       },
     };
     await cancelCb.handler(authorizedCtx);
-    assert.match(editedText, /dibatalkan/i);
+    assert.match(editedText, /cancelled|dibatalkan/i);
 
     // Pastikan data tidak terhapus
     const noteCount = db
@@ -260,7 +260,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
       editMessageText: async () => {},
     };
     await confirmCb.handler(unauthorizedCtx);
-    assert.match(alertText, /hanya dapat dikonfirmasi oleh pemilik akun/i);
+    assert.match(alertText, /only be confirmed by the account owner|hanya dapat dikonfirmasi oleh pemilik akun/i);
 
     // 2. Berhasil jika pemilik akun
     let editedText = '';
@@ -273,7 +273,7 @@ test('F-61: Ekspor dan Hapus Data (Privasi & GDPR Compliance)', async (t) => {
       },
     };
     await confirmCb.handler(authorizedCtx);
-    assert.match(editedText, /dihapus secara permanen/i);
+    assert.match(editedText, /permanently destroyed|dihapus secara permanen/i);
 
     // Verifikasi seluruh tabel bersih dari testUserId
     assert.equal(

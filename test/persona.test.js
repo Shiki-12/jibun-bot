@@ -81,7 +81,7 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
 
       assert.equal(custom.id, 'custom');
       assert.ok(custom.systemPrompt.includes(userDesc));
-      assert.ok(custom.systemPrompt.includes('Aturan Keselamatan & Krisis'));
+      assert.ok(custom.systemPrompt.includes('Safety & Crisis Rules'));
       assert.ok(custom.systemPrompt.includes('SEJIWA'));
       assert.ok(custom.systemPrompt.includes('119 (ekstensi 8)'));
     });
@@ -124,7 +124,7 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Ganti Personality Bot'));
+      assert.ok(replies[0].text.includes('Change Bot Personality'));
       assert.ok(replies[0].opts.reply_markup);
     });
 
@@ -158,7 +158,7 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Berhasil Diaktifkan'));
+      assert.ok(replies[0].includes('Successfully Activated'));
       assert.equal(getSetting(ctx, 'persona'), 'custom');
 
       const customP = getPersonality('custom', ctx);
@@ -179,7 +179,7 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Hanya admin grup'));
+      assert.ok(replies[0].includes('Only group administrators'));
       // Pengaturan tidak boleh berubah
       assert.notEqual(getSetting(ctx, 'persona'), 'ceria');
     });
@@ -277,13 +277,13 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
       // 1. Tanpa DB setting -> ambil dari env
       await aboutCmd.handler(ctx);
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Personality aktif: Nando (ceria) [sumber: env]'));
+      assert.ok(replies[0].includes('Active personality: Nando (ceria) [source: env]'));
 
       // 2. Set DB setting -> ambil dari pilihan chat
       setSetting(ctx, 'persona', 'manis');
       await aboutCmd.handler(ctx);
       assert.equal(replies.length, 2);
-      assert.ok(replies[1].includes('Personality aktif: Rio (manis) [sumber: pilihan chat]'));
+      assert.ok(replies[1].includes('Active personality: Rio (manis) [source: pilihan chat]'));
 
       // 3. Reset DB setting dan hapus env -> default
       const db = getDb();
@@ -291,7 +291,7 @@ describe('F-15: Ganti Persona & Persona Custom', () => {
       delete process.env.PERSONALITY;
       await aboutCmd.handler(ctx);
       assert.equal(replies.length, 3);
-      assert.ok(replies[2].includes('Personality aktif: Raka (tsundere) [sumber: default]'));
+      assert.ok(replies[2].includes('Active personality: Raka (tsundere) [source: default]'));
     });
   });
 });

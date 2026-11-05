@@ -297,7 +297,7 @@ describe('Feature Loader & Core Module (F-00)', () => {
     });
 
     assert.ok(nonAdminReply.includes('/start'));
-    assert.ok(!nonAdminReply.includes('Khusus admin'));
+    assert.ok(!nonAdminReply.includes('Admin only'));
     assert.ok(!nonAdminReply.includes('/stats'));
     assert.ok(!nonAdminReply.includes('/ban'));
     assert.ok(!nonAdminReply.includes('/broadcast'));
@@ -313,7 +313,7 @@ describe('Feature Loader & Core Module (F-00)', () => {
     });
 
     assert.ok(adminReply.includes('/start'));
-    assert.ok(adminReply.includes('Khusus admin:'));
+    assert.ok(adminReply.includes('Admin only:'));
     assert.ok(adminReply.includes('/stats'));
     assert.ok(adminReply.includes('/ban'));
     assert.ok(adminReply.includes('/broadcast'));

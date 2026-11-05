@@ -14,7 +14,7 @@ export default {
   commands: [
     {
       name: 'voice',
-      description: 'Aktifkan atau matikan balasan suara (TTS) bot (/voice [on|off])',
+      description: 'Enable or disable voice replies (TTS) (/voice [on|off])',
       handler: async (ctx) => {
         const personaId = getSetting(ctx, 'persona') || 'tsundere';
         const persona = getPersonality(personaId, ctx);
@@ -25,7 +25,7 @@ export default {
           setSetting(ctx, 'voice_reply', 1);
           const msg =
             persona.strings?.voiceEnabled ??
-            'Balasan pesan suara (TTS) diaktifkan.';
+            'Voice replies (TTS) enabled.';
           await ctx.reply(msg);
           return;
         }
@@ -34,17 +34,17 @@ export default {
           setSetting(ctx, 'voice_reply', 0);
           const msg =
             persona.strings?.voiceDisabled ??
-            'Balasan pesan suara (TTS) dinonaktifkan.';
+            'Voice replies (TTS) disabled.';
           await ctx.reply(msg);
           return;
         }
 
         // Tampilkan status saat ini
         const current = getSetting(ctx, 'voice_reply', 0);
-        const statusText = current === 1 ? 'aktif (ON)' : 'nonaktif (OFF)';
+        const statusText = current === 1 ? 'enabled (ON)' : 'disabled (OFF)';
         await ctx.reply(
-          `*Pengaturan Balasan Suara (TTS):*\nStatus saat ini: *${statusText}*\n\n` +
-            'Gunakan `/voice on` untuk menyalakan atau `/voice off` untuk mematikan.',
+          `*Voice Reply Settings (TTS):*\nCurrent status: *${statusText}*\n\n` +
+            'Use `/voice on` to enable or `/voice off` to disable.',
           { parse_mode: 'Markdown' },
         );
       },
@@ -71,7 +71,7 @@ export default {
       if (isVoiceTooLong(voice.duration)) {
         const tooLongMsg =
           persona.strings?.voiceTooLong ??
-          'Durasi pesan suara terlalu panjang! Maksimal 60 detik.';
+          'Voice message duration is too long! Maximum 60 seconds.';
         await ctx.reply(tooLongMsg).catch(() => {});
         return;
       }
@@ -104,13 +104,13 @@ export default {
         }
 
         if (!transcribedText) {
-          await ctx.reply('...Tidak ada ucapan kata yang terdeteksi dari pesan suaramu.');
+          await ctx.reply('...No speech detected from your voice message.');
           return;
         }
 
         // Tampilkan konfirmasi hasil transkripsi
         const heardMsg = (
-          persona.strings?.voiceHeard ?? 'Kudengar: *"{text}"*'
+          persona.strings?.voiceHeard ?? 'Heard: *"{text}"*'
         ).replace('{text}', transcribedText);
         await ctx.reply(heardMsg, { parse_mode: 'Markdown' }).catch(() => {});
 
@@ -125,7 +125,7 @@ export default {
         if (err.message === 'STT_NOT_SUPPORTED' || err.status === 404) {
           const unsupportedMsg =
             persona.strings?.voiceSttUnsupported ??
-            'Fitur transkripsi suara (STT) belum didukung oleh gateway API saat ini. Silakan kirimkan pesan teks ya.';
+            'Voice transcription (STT) is not supported by the current API gateway. Please send a text message instead.';
           await ctx.reply(unsupportedMsg).catch(() => {});
           return;
         }

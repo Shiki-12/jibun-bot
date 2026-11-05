@@ -31,22 +31,22 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
 
   describe('WMO Code Interpreter', () => {
     it('menerjemahkan kode WMO cuaca dengan deskripsi dan tipe yang tepat', () => {
-      assert.equal(interpretWeatherCode(0).description, 'Cerah');
+      assert.equal(interpretWeatherCode(0).description, 'Clear');
       assert.equal(interpretWeatherCode(0).type, 'clear');
 
-      assert.equal(interpretWeatherCode(2).description, 'Sebagian Berawan');
+      assert.equal(interpretWeatherCode(2).description, 'Partly Cloudy');
       assert.equal(interpretWeatherCode(2).type, 'cloudy');
 
-      assert.equal(interpretWeatherCode(61).description, 'Hujan Ringan');
+      assert.equal(interpretWeatherCode(61).description, 'Slight Rain');
       assert.equal(interpretWeatherCode(61).type, 'rain');
 
-      assert.equal(interpretWeatherCode(95).description, 'Badai Petir');
+      assert.equal(interpretWeatherCode(95).description, 'Thunderstorm');
       assert.equal(interpretWeatherCode(95).type, 'thunder');
     });
 
     it('fallback ke berawan jika kode cuaca tidak dikenal', () => {
       const fallback = interpretWeatherCode(9999);
-      assert.equal(fallback.description, 'Berawan');
+      assert.equal(fallback.description, 'Cloudy');
       assert.equal(fallback.type, 'cloudy');
     });
   });
@@ -54,31 +54,31 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
   describe('getWeatherAdvice (Saran In-Character)', () => {
     it('memberikan saran hujan jika cuaca hujan atau peluang hujan tinggi', () => {
       const tsundereRain = getWeatherAdvice({ code: 61, rainProb: 70, personaId: 'tsundere' });
-      assert.ok(tsundereRain.includes('payung'));
-      assert.ok(tsundereRain.includes('bodoh') || tsundereRain.includes('repot'));
+      assert.ok(tsundereRain.includes('umbrella'));
+      assert.ok(tsundereRain.includes('cold') || tsundereRain.includes('trouble'));
 
       const manisRain = getWeatherAdvice({ code: 61, rainProb: 70, personaId: 'manis' });
-      assert.ok(manisRain.includes('payung'));
-      assert.ok(manisRain.includes('kesehatan'));
+      assert.ok(manisRain.includes('umbrella'));
+      assert.ok(manisRain.includes('health'));
 
       const ceriaRain = getWeatherAdvice({ code: 61, rainProb: 70, personaId: 'ceria' });
-      assert.ok(ceriaRain.includes('payung'));
+      assert.ok(ceriaRain.includes('umbrella'));
 
       const sarkasRain = getWeatherAdvice({ code: 61, rainProb: 70, personaId: 'sarkas' });
-      assert.ok(sarkasRain.includes('payung'));
+      assert.ok(sarkasRain.includes('umbrella'));
     });
 
     it('memberikan saran cuaca panas jika suhu >= 33 derajat', () => {
       const tsundereHot = getWeatherAdvice({ code: 0, temp: 34, rainProb: 10, personaId: 'tsundere' });
-      assert.ok(tsundereHot.includes('Panas') || tsundereHot.includes('dehidrasi'));
+      assert.ok(tsundereHot.includes('scorching') || tsundereHot.includes('dehydrated'));
 
       const sarkasHot = getWeatherAdvice({ code: 0, temp: 35, rainProb: 5, personaId: 'sarkas' });
-      assert.ok(sarkasHot.includes('memanggang') || sarkasHot.includes('ruangan'));
+      assert.ok(sarkasHot.includes('bake') || sarkasHot.includes('inside'));
     });
 
     it('memberikan saran cuaca sejuk/cerah jika kondisi normal', () => {
       const tsunderePleasant = getWeatherAdvice({ code: 0, temp: 27, rainProb: 10, personaId: 'tsundere' });
-      assert.ok(tsunderePleasant.includes('rebahan') || tsunderePleasant.includes('beraktivitas'));
+      assert.ok(tsunderePleasant.includes('slacking') || tsunderePleasant.includes('pleasant'));
     });
   });
 
@@ -189,7 +189,7 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
       assert.equal(weather.feelsLike, 35);
       assert.equal(weather.humidity, 72);
       assert.equal(weather.rainProb, 20);
-      assert.equal(weather.conditionText, 'Cerah Berawan');
+      assert.equal(weather.conditionText, 'Mainly Clear');
 
       // Panggilan kedua dalam batas waktu TTL: harus mengambil dari cache (tidak memanggil fetch lagi)
       const cachedWeather = await getWeatherData('yogyakarta', { fetchFn: mockFetch });
@@ -230,16 +230,16 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
         windSpeed: 14,
         rainProb: 15,
         weatherCode: 0,
-        conditionText: 'Cerah',
+        conditionText: 'Clear',
         conditionType: 'clear',
       };
 
       const report = formatWeatherReport({ weather: sampleWeather, personaId: 'tsundere' });
-      assert.ok(report.includes('Cuaca di Surabaya, Jawa Timur, Indonesia'));
+      assert.ok(report.includes('Weather in Surabaya, Jawa Timur, Indonesia'));
       assert.ok(report.includes('34°C'));
-      assert.ok(report.includes('Cerah'));
+      assert.ok(report.includes('Clear'));
       assert.ok(report.includes('68%'));
-      assert.ok(report.includes('dehidrasi') || report.includes('Panas'));
+      assert.ok(report.includes('dehydrated') || report.includes('scorching'));
     });
   });
 
@@ -267,7 +267,7 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Belum ada kota'));
+      assert.ok(replies[0].includes('No home city'));
 
       // Setelah diatur:
       setSetting(ctx, 'city', 'Denpasar');
@@ -334,7 +334,7 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
         await cmd.handler(ctx);
 
         assert.equal(replies.length, 1);
-        assert.ok(replies[0].includes('tidak ditemukan'));
+        assert.ok(replies[0].includes('not found'));
       } finally {
         globalThis.fetch = origFetch;
       }
@@ -355,7 +355,7 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('belum mengatur kota'));
+      assert.ok(replies[0].includes('not set your home city'));
     });
 
     it('/cuaca <kota> mengambil cuaca untuk kota yang diminta', async () => {
@@ -394,9 +394,9 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
         await cmd.handler(ctx);
 
         assert.equal(replies.length, 1);
-        assert.ok(replies[0].includes('Cuaca di Malang'));
+        assert.ok(replies[0].includes('Weather in Malang'));
         assert.ok(replies[0].includes('25°C'));
-        assert.ok(replies[0].includes('Hujan'));
+        assert.ok(replies[0].includes('Rain'));
       } finally {
         globalThis.fetch = origFetch;
       }
@@ -446,7 +446,7 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
         await tagDef.handle(ctx, ['Medan']);
 
         assert.equal(replies.length, 1);
-        assert.ok(replies[0].includes('Cuaca di Medan'));
+        assert.ok(replies[0].includes('Weather in Medan'));
         assert.ok(replies[0].includes('31°C'));
       } finally {
         globalThis.fetch = origFetch;
@@ -456,15 +456,15 @@ describe('F-40: Cuaca (Open-Meteo)', () => {
 
   describe('Integrasi Pesan Pagi (F-13)', () => {
     it('buildMorningMessage menyertakan cuaca jika weatherSummary diberikan', () => {
-      const summary = '• Di *Bandung*: Sebagian Berawan, suhu 24°C (peluang hujan 20%).';
+      const summary = '• In *Bandung*: Partly Cloudy, temp 24°C (rain chance 20%).';
       const msg = buildMorningMessage({
         userId: TEST_USER,
         tz: 'Asia/Jakarta',
         weatherSummary: summary,
       });
 
-      assert.ok(msg.includes('Prakiraan Cuaca Hari Ini:'));
-      assert.ok(msg.includes('Di *Bandung*'));
+      assert.ok(msg.includes("Today's Weather Forecast:"));
+      assert.ok(msg.includes('In *Bandung*'));
       assert.ok(msg.includes('24°C'));
     });
   });

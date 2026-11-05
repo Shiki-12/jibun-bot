@@ -16,7 +16,7 @@ export default {
   commands: [
     {
       name: 'timer',
-      description: 'Atur timer hitung mundur (/timer <durasi> [nama] atau /timer untuk melihat daftar)',
+      description: 'Set countdown timer (/timer <duration> [name] or /timer to list)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const rawText = ctx.message?.text?.trim() || '';
@@ -28,18 +28,18 @@ export default {
           if (active.length === 0) {
             const emptyMsg =
               p.strings?.timerListEmpty ??
-              'Tidak ada timer yang sedang aktif di chat ini.';
+              'No active timers running in this chat.';
             await ctx.reply(emptyMsg);
             return;
           }
 
           const header =
-            p.strings?.timerListHeader ?? '*Daftar Timer Aktif:*';
+            p.strings?.timerListHeader ?? '*Active Timers List:*';
           const lines = active.map(
             (t) =>
-              `• *#${t.id}*: ${t.label} (sisa ~${formatDuration(t.remainingMs)})`,
+              `• *#${t.id}*: ${t.label} (~${formatDuration(t.remainingMs)} remaining)`,
           );
-          const footer = '\nKetik `/canceltimer <id>` untuk membatalkan timer.';
+          const footer = '\nType `/canceltimer <id>` to cancel a timer.';
           await ctx.reply(`${header}\n\n${lines.join('\n')}${footer}`, {
             parse_mode: 'Markdown',
           });
@@ -53,19 +53,19 @@ export default {
           if (ok) {
             const cancelMsg =
               p.strings?.timerCancelled?.replace('{id}', timerId) ??
-              `Timer #${timerId} berhasil dibatalkan.`;
+              `Timer #${timerId} successfully cancelled.`;
             await ctx.reply(cancelMsg);
           } else {
             const notFoundMsg =
               p.strings?.timerNotFound?.replace('{id}', timerId) ??
-              `Timer #${timerId} tidak ditemukan atau sudah selesai.`;
+              `Timer #${timerId} not found or already finished.`;
             await ctx.reply(notFoundMsg);
           }
           return;
         }
 
         const durationArg = parts[0];
-        const labelArg = parts.slice(1).join(' ').trim() || 'Waktu habis!';
+        const labelArg = parts.slice(1).join(' ').trim() || 'Time is up!';
 
         try {
           const durationMs = parseTimerDuration(durationArg);
@@ -81,7 +81,7 @@ export default {
           const durStr = formatDuration(durationMs);
           const template =
             p.strings?.timerSet ??
-            '*Timer Dimulai!*\n• Durasi: *{duration}*\n• Label: *{label}*\n• Selesai pada: *{time}* ({tz})';
+            '*Timer Started!*\n• Duration: *{duration}*\n• Label: *{label}*\n• Finishes at: *{time}* ({tz})';
           const replyText = template
             .replace('{duration}', durStr)
             .replace('{label}', timer.label)
@@ -96,14 +96,14 @@ export default {
     },
     {
       name: 'canceltimer',
-      description: 'Batalkan timer aktif (/canceltimer <id>)',
+      description: 'Cancel active timer (/canceltimer <id>)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const parts = ctx.message?.text?.trim().split(/\s+/) || [];
         const timerId = parseInt(parts[1], 10);
 
         if (isNaN(timerId)) {
-          await ctx.reply('Gunakan format: `/canceltimer <id>`', {
+          await ctx.reply('Use format: `/canceltimer <id>`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -113,19 +113,19 @@ export default {
         if (ok) {
           const cancelMsg =
             p.strings?.timerCancelled?.replace('{id}', timerId) ??
-            `Timer #${timerId} berhasil dibatalkan.`;
+            `Timer #${timerId} successfully cancelled.`;
           await ctx.reply(cancelMsg);
         } else {
           const notFoundMsg =
             p.strings?.timerNotFound?.replace('{id}', timerId) ??
-            `Timer #${timerId} tidak ditemukan atau sudah selesai.`;
+            `Timer #${timerId} not found or already finished.`;
           await ctx.reply(notFoundMsg);
         }
       },
     },
     {
       name: 'pomodoro',
-      description: 'Mulai atau cek sesi Pomodoro (/pomodoro [work] [break] [cycles], /pomodoro status, /pomodoro stop)',
+      description: 'Start or check Pomodoro session (/pomodoro [work] [break] [cycles], /pomodoro status, /pomodoro stop)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const rawText = ctx.message?.text?.trim() || '';
@@ -138,12 +138,12 @@ export default {
           if (!pom) {
             const noActiveMsg =
               p.strings?.pomodoroNoActive ??
-              'Tidak ada sesi Pomodoro yang sedang berjalan di chat ini.';
+              'No Pomodoro session currently running in this chat.';
             await ctx.reply(noActiveMsg);
             return;
           }
 
-          const phaseName = pom.phase === 'work' ? 'Fokus' : 'Istirahat';
+          const phaseName = pom.phase === 'work' ? 'Focus' : 'Break';
           const remStr = formatDuration(pom.remainingMs);
           const statusMsg =
             p.strings?.pomodoroStatus
@@ -151,11 +151,11 @@ export default {
               ?.replace('{totalCycles}', pom.totalCycles)
               ?.replace('{phase}', phaseName)
               ?.replace('{remaining}', remStr) ??
-            `*Status Pomodoro:*\n` +
-              `• Tahap: *${phaseName}*\n` +
-              `• Siklus: *${pom.cycle}/${pom.totalCycles}*\n` +
-              `• Sisa waktu: *${remStr}*\n\n` +
-              `Ketik \`/stop\` untuk membatalkan sesi.`;
+            `*Pomodoro Status:*\n` +
+              `• Phase: *${phaseName}*\n` +
+              `• Cycle: *${pom.cycle}/${pom.totalCycles}*\n` +
+              `• Remaining time: *${remStr}*\n\n` +
+              `Type \`/stop\` to cancel the session.`;
 
           await ctx.reply(statusMsg, { parse_mode: 'Markdown' });
           return;
@@ -167,12 +167,12 @@ export default {
           if (ok) {
             const stopMsg =
               p.strings?.pomodoroStopped ??
-              'Sesi Pomodoro telah dihentikan.';
+              'Pomodoro session has been stopped.';
             await ctx.reply(stopMsg);
           } else {
             const noActiveMsg =
               p.strings?.pomodoroNoActive ??
-              'Tidak ada sesi Pomodoro yang sedang berjalan di chat ini.';
+              'No Pomodoro session currently running in this chat.';
             await ctx.reply(noActiveMsg);
           }
           return;
@@ -206,10 +206,10 @@ export default {
 
           const template =
             p.strings?.pomodoroStarted ??
-            `*Sesi Pomodoro Dimulai!*\n` +
-              `• Siklus 1/{cycles}: Fokus selama *{work} menit* (selesai: {time})\n` +
-              `• Waktu istirahat: *{break} menit*\n\n` +
-              `Tetap fokus dan selesaikan tugasmu! Ketik \`/stop\` kapan saja untuk menghentikan.`;
+            `*Pomodoro Session Started!*\n` +
+              `• Cycle 1/{cycles}: Focus for *{work} minutes* (finishes: {time})\n` +
+              `• Break duration: *{break} minutes*\n\n` +
+              `Stay focused and finish your tasks! Type \`/stop\` anytime to stop.`;
 
           const replyText = template
             .replace('{work}', pom.workMin)
@@ -225,19 +225,19 @@ export default {
     },
     {
       name: 'stop',
-      description: 'Hentikan sesi Pomodoro yang sedang berjalan',
+      description: 'Stop active Pomodoro session',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const ok = stopPomodoro(ctx.chat.id);
         if (ok) {
           const stopMsg =
             p.strings?.pomodoroStopped ??
-            'Sesi Pomodoro telah dihentikan.';
+            'Pomodoro session has been stopped.';
           await ctx.reply(stopMsg);
         } else {
           const noActiveMsg =
             p.strings?.pomodoroNoActive ??
-            'Tidak ada sesi Pomodoro yang sedang berjalan di chat ini.';
+            'No Pomodoro session currently running in this chat.';
           await ctx.reply(noActiveMsg);
         }
       },
@@ -248,10 +248,10 @@ export default {
     {
       name: 'TIMER',
       promptHint:
-        'Mulai timer hitung mundur. Format: [TIMER: durasi | label] (contoh: [TIMER: 15m | rebus telur], [TIMER: 30s | tahan nafas], [TIMER: 1j 30m | istirahat siang]). Gunakan tag ini jika user meminta dipasangkan timer hitung mundur.',
+        'Start countdown timer. Format: [TIMER: duration | label] (example: [TIMER: 15m | boil eggs], [TIMER: 30s | hold breath], [TIMER: 1h 30m | lunch break]). Emit this tag when user asks to set a countdown timer.',
       handle: async (ctx, args) => {
         const rawDuration = args?.[0]?.trim();
-        const label = args?.[1]?.trim() || 'Waktu habis!';
+        const label = args?.[1]?.trim() || 'Time is up!';
         if (!rawDuration) return;
 
         try {
@@ -269,7 +269,7 @@ export default {
           const durStr = formatDuration(durationMs);
           const template =
             p.strings?.timerSet ??
-            '*Timer Dimulai!*\n• Durasi: *{duration}*\n• Label: *{label}*\n• Selesai pada: *{time}* ({tz})';
+            '*Timer Started!*\n• Duration: *{duration}*\n• Label: *{label}*\n• Finishes at: *{time}* ({tz})';
           const replyText = template
             .replace('{duration}', durStr)
             .replace('{label}', timer.label)
@@ -278,14 +278,14 @@ export default {
 
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error(`Gagal memproses tag [TIMER: ${rawDuration}]:`, err.message);
+          console.error(`Failed to process tag [TIMER: ${rawDuration}]:`, err.message);
         }
       },
     },
     {
       name: 'POMODORO',
       promptHint:
-        'Mulai atau hentikan sesi Pomodoro. Format: [POMODORO: start | work | break | cycles] (contoh: [POMODORO: start | 25 | 5 | 4]) atau [POMODORO: stop]. Gunakan tag ini jika user meminta memulai atau menghentikan sesi fokus/pomodoro.',
+        'Start or stop Pomodoro session. Format: [POMODORO: start | work | break | cycles] (example: [POMODORO: start | 25 | 5 | 4]) or [POMODORO: stop]. Emit this tag when user asks to start or stop a focus/pomodoro session.',
       handle: async (ctx, args) => {
         const action = args?.[0]?.trim().toLowerCase();
         const p = ctx.persona ?? { strings: {} };
@@ -295,7 +295,7 @@ export default {
           if (ok) {
             const stopMsg =
               p.strings?.pomodoroStopped ??
-              'Sesi Pomodoro telah dihentikan.';
+              'Pomodoro session has been stopped.';
             await ctx.reply(stopMsg);
           }
           return;
@@ -319,10 +319,10 @@ export default {
 
             const template =
               p.strings?.pomodoroStarted ??
-              `*Sesi Pomodoro Dimulai!*\n` +
-                `• Siklus 1/{cycles}: Fokus selama *{work} menit* (selesai: {time})\n` +
-                `• Waktu istirahat: *{break} menit*\n\n` +
-                `Tetap fokus dan selesaikan tugasmu! Ketik \`/stop\` kapan saja untuk menghentikan.`;
+              `*Pomodoro Session Started!*\n` +
+                `• Cycle 1/{cycles}: Focus for *{work} minutes* (finishes: {time})\n` +
+                `• Break duration: *{break} minutes*\n\n` +
+                `Stay focused and finish your tasks! Type \`/stop\` anytime to stop.`;
 
             const replyText = template
               .replace('{work}', pom.workMin)
@@ -332,7 +332,7 @@ export default {
 
             await ctx.reply(replyText, { parse_mode: 'Markdown' });
           } catch (err) {
-            console.error('Gagal memproses tag [POMODORO: start]:', err.message);
+            console.error('Failed to process tag [POMODORO: start]:', err.message);
           }
         }
       },

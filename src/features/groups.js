@@ -28,21 +28,21 @@ export default {
         if (member.id === ctx.me?.id) {
           const introMsg =
             `${persona.greeting}\n\n` +
-            '*Informasi Penggunaan Grup:*\n' +
-            `• Bot hanya merespons jika di-mention (@${ctx.me?.username}) atau pesannya di-reply (kecuali admin mengaktifkan /chatty on).\n` +
-            '• Bot menyimpan penyangga 200 pesan teks terakhir untuk fitur ringkasan /rangkum_grup.\n' +
-            '• Pastikan *Group Privacy* dimatikan di @BotFather atau jadikan bot Admin grup agar bot dapat membaca pesan.';
+            '*Group Usage Guide:*\n' +
+            `• Bot only responds when mentioned (@${ctx.me?.username}) or replied to (unless /chatty is enabled).\n` +
+            '• Bot keeps a buffer of the last 200 messages for /rangkum_grup.\n' +
+            '• Ensure *Group Privacy* is turned off in @BotFather or make the bot an admin so it can read messages.';
           await ctx.reply(introMsg, { parse_mode: 'Markdown' }).catch(() => {});
           continue;
         }
 
         // Jika anggota baru adalah pengguna manusia & fitur welcome aktif
         if (settings.welcome_enabled) {
-          const groupTitle = ctx.chat.title || 'grup';
-          const name = member.first_name || 'Teman';
+          const groupTitle = ctx.chat.title || 'group';
+          const name = member.first_name || 'Friend';
           const template =
             persona.strings?.groupWelcome ??
-            'Selamat datang di {group}, {name}!';
+            'Welcome to {group}, {name}!';
           const welcomeText = template
             .replace('{name}', name)
             .replace('{group}', groupTitle);
@@ -56,14 +56,14 @@ export default {
   commands: [
     {
       name: 'rangkum_grup',
-      description: 'Rangkum obrolan grup beberapa pesan terakhir (/rangkum_grup [jumlah])',
+      description: 'Summarize recent group conversation (/rangkum_grup [count])',
       handler: async (ctx) => {
         if (!ctx.chat || ctx.chat.type === 'private') {
           const personaId = getSetting(ctx, 'persona') || 'tsundere';
           const persona = getPersonality(personaId, ctx);
           const notGroupMsg =
             persona.strings?.notGroupChat ??
-            'Perintah ini hanya dapat digunakan di dalam grup chat.';
+            'This command can only be used in a group chat.';
           await ctx.reply(notGroupMsg);
           return;
         }
@@ -78,8 +78,8 @@ export default {
 
         if (messages.length < 3) {
           await ctx.reply(
-            'Belum cukup riwayat pesan di grup ini untuk dirangkum (minimal butuh 3 pesan).\n' +
-              'Pesan obrolan grup baru akan tercatat saat bot aktif berada di grup ini (maksimal 200 pesan terakhir).',
+            'Not enough message history in this group to summarize (at least 3 messages needed).\n' +
+              'Group messages will be recorded while the bot is active here (up to 200 most recent).',
           );
           return;
         }
@@ -94,27 +94,27 @@ export default {
 
           const introTemplate =
             persona.strings?.groupSummaryIntro ??
-            'Ringkasan {count} pesan terakhir di grup ini:';
+            'Summary of the last {count} messages in this group:';
           const intro = introTemplate.replace('{count}', res.messageCount);
 
           await ctx.reply(`${intro}\n\n${res.summaryText}`);
         } catch (err) {
-          console.error('Gagal merangkum grup:', err);
+          console.error('Failed to summarize group:', err);
           await ctx.reply(
-            persona.errorMessage || 'Terjadi kesalahan saat merangkum obrolan grup.',
+            persona.errorMessage || 'An error occurred while summarizing group messages.',
           );
         }
       },
     },
     {
       name: 'chatty',
-      description: 'Aktifkan/nonaktifkan peluang bot nimbrung otomatis di grup (/chatty [on|off])',
+      description: 'Enable/disable spontaneous bot replies in group (/chatty [on|off])',
       handler: async (ctx) => {
         if (!ctx.chat || ctx.chat.type === 'private') {
           const personaId = getSetting(ctx, 'persona') || 'tsundere';
           const persona = getPersonality(personaId, ctx);
           await ctx.reply(
-            persona.strings?.notGroupChat ?? 'Perintah ini khusus untuk grup.',
+            persona.strings?.notGroupChat ?? 'This command is only available in groups.',
           );
           return;
         }
@@ -126,7 +126,7 @@ export default {
         if (!isAdmin) {
           await ctx.reply(
             persona.strings?.notGroupAdmin ??
-              'Hanya admin grup yang dapat mengatur mode chatty.',
+              'Only group admins can configure chatty mode.',
           );
           return;
         }
@@ -138,7 +138,7 @@ export default {
           setGroupSetting(ctx.chat.id, { chatty: 1 });
           await ctx.reply(
             persona.strings?.chattyEnabled ??
-              'Mode chatty diaktifkan! Bot akan sesekali nimbrung obrolan grup (~5% peluang).',
+              'Chatty mode enabled! Bot will occasionally chime into group conversations (~5% chance).',
           );
           return;
         }
@@ -147,32 +147,32 @@ export default {
           setGroupSetting(ctx.chat.id, { chatty: 0 });
           await ctx.reply(
             persona.strings?.chattyDisabled ??
-              'Mode chatty dinonaktifkan. Bot hanya merespons jika di-mention atau di-reply.',
+              'Chatty mode disabled. Bot will only respond when mentioned or replied to.',
           );
           return;
         }
 
         const current = getGroupSettings(ctx.chat.id);
-        const statusStr = current.chatty ? 'Aktif (ON)' : 'Mati (OFF)';
+        const statusStr = current.chatty ? 'Active (ON)' : 'Disabled (OFF)';
         await ctx.reply(
-          `*Status Mode Chatty:*\n` +
+          `*Chatty Mode Status:*\n` +
             `• Status: *${statusStr}*\n` +
-            `• Peluang respon: *${Math.round(current.chatty_prob * 100)}%*\n` +
-            `• Cooldown: *1 menit*\n\n` +
-            `Ubah setelan: \`/chatty on\` atau \`/chatty off\` (khusus admin).`,
+            `• Response chance: *${Math.round(current.chatty_prob * 100)}%*\n` +
+            `• Cooldown: *1 minute*\n\n` +
+            `Change settings: \`/chatty on\` or \`/chatty off\` (admin only).`,
           { parse_mode: 'Markdown' },
         );
       },
     },
     {
       name: 'welcome',
-      description: 'Aktifkan/nonaktifkan sapaan anggota baru di grup (/welcome [on|off])',
+      description: 'Enable/disable new member greetings in group (/welcome [on|off])',
       handler: async (ctx) => {
         if (!ctx.chat || ctx.chat.type === 'private') {
           const personaId = getSetting(ctx, 'persona') || 'tsundere';
           const persona = getPersonality(personaId, ctx);
           await ctx.reply(
-            persona.strings?.notGroupChat ?? 'Perintah ini khusus untuk grup.',
+            persona.strings?.notGroupChat ?? 'This command is only available in groups.',
           );
           return;
         }
@@ -184,7 +184,7 @@ export default {
         if (!isAdmin) {
           await ctx.reply(
             persona.strings?.notGroupAdmin ??
-              'Hanya admin grup yang dapat mengatur sapaan anggota baru.',
+              'Only group admins can configure member greetings.',
           );
           return;
         }
@@ -196,7 +196,7 @@ export default {
           setGroupSetting(ctx.chat.id, { welcome_enabled: 1 });
           await ctx.reply(
             persona.strings?.welcomeEnabled ??
-              'Sapaan anggota baru berhasil diaktifkan.',
+              'New member greeting enabled.',
           );
           return;
         }
@@ -205,17 +205,17 @@ export default {
           setGroupSetting(ctx.chat.id, { welcome_enabled: 0 });
           await ctx.reply(
             persona.strings?.welcomeDisabled ??
-              'Sapaan anggota baru dinonaktifkan.',
+              'New member greeting disabled.',
           );
           return;
         }
 
         const current = getGroupSettings(ctx.chat.id);
-        const statusStr = current.welcome_enabled ? 'Aktif (ON)' : 'Mati (OFF)';
+        const statusStr = current.welcome_enabled ? 'Active (ON)' : 'Disabled (OFF)';
         await ctx.reply(
-          `*Status Sapaan Anggota Baru:*\n` +
+          `*New Member Greeting Status:*\n` +
             `• Status: *${statusStr}*\n\n` +
-            `Ubah setelan: \`/welcome on\` atau \`/welcome off\` (khusus admin).`,
+            `Change settings: \`/welcome on\` or \`/welcome off\` (admin only).`,
           { parse_mode: 'Markdown' },
         );
       },

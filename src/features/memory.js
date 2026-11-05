@@ -16,12 +16,12 @@ export function renderMemoryView(userId, persona) {
     return {
       text:
         p.strings?.memoryEmpty ??
-        'Aku belum tahu apa-apa tentang kamu. Jangan sok misterius deh! (¬_¬)',
+        'I do not know anything about you yet. Stop trying to act mysterious. (¬_¬)',
       keyboard: null,
     };
   }
 
-  const header = p.strings?.memoryHeader ?? '*Fakta yang kuingat tentangmu:*';
+  const header = p.strings?.memoryHeader ?? '*Facts I remember about you:*';
   const lines = [header, ''];
 
   facts.forEach((f) => {
@@ -29,18 +29,18 @@ export function renderMemoryView(userId, persona) {
   });
 
   lines.push('');
-  lines.push('_Ketik `/delfact <id>` atau gunakan tombol di bawah untuk menghapus._');
+  lines.push('_Type `/delfact <id>` or use the buttons below to delete._');
 
   const keyboard = new InlineKeyboard();
   // Buat tombol hapus per fakta (maksimal 10 tombol pertama agar ringkas)
   const buttonsToDisplay = facts.slice(0, 8);
   buttonsToDisplay.forEach((f, idx) => {
-    keyboard.text(`Hapus #${f.id}`, `fact:del:${f.id}`);
+    keyboard.text(`Delete #${f.id}`, `fact:del:${f.id}`);
     if (idx % 2 === 1) keyboard.row();
   });
 
   if (buttonsToDisplay.length % 2 !== 0) keyboard.row();
-  keyboard.text('Hapus Semua Fakta', 'fact:clear_prompt');
+  keyboard.text('Delete All Facts', 'fact:clear_prompt');
 
   return { text: lines.join('\n'), keyboard };
 }
@@ -51,7 +51,7 @@ export default {
   commands: [
     {
       name: 'memory',
-      description: 'Lihat fakta yang diingat bot tentangmu (/memory)',
+      description: 'View facts the bot remembers about you (/memory)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const { text, keyboard } = renderMemoryView(ctx.from.id, p);
@@ -63,14 +63,14 @@ export default {
     },
     {
       name: 'delfact',
-      description: 'Hapus fakta tertentu berdasarkan ID (contoh: /delfact 5)',
+      description: 'Delete a specific fact by ID (example: /delfact 5)',
       handler: async (ctx) => {
         const p = getPersona(ctx);
         const args = ctx.message.text.split(/\s+/).slice(1);
         const factId = Number(args[0]);
 
         if (!factId || isNaN(factId)) {
-          await ctx.reply('Sebutkan ID fakta yang ingin dihapus. Contoh: `/delfact 5`', {
+          await ctx.reply('Specify the fact ID you want to delete. Example: `/delfact 5`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -78,25 +78,25 @@ export default {
 
         const success = deleteFact(ctx.from.id, factId);
         if (!success) {
-          await ctx.reply(`Fakta #${factId} tidak ditemukan.`);
+          await ctx.reply(`Fact #${factId} not found.`);
           return;
         }
 
         const template =
-          p.strings?.factDeleted ?? 'Fakta #{id} sudah kulupakan. Puas? (¬_¬)';
+          p.strings?.factDeleted ?? 'Fact #{id} has been forgotten. Satisfied? (¬_¬)';
         await ctx.reply(template.replace('{id}', factId));
       },
     },
     {
       name: 'clearfacts',
-      description: 'Hapus semua memori fakta tentang dirimu',
+      description: 'Delete all memory facts about yourself',
       handler: async (ctx) => {
         const keyboard = new InlineKeyboard()
-          .text('Ya, Hapus Semua', 'fact:clear_confirmed')
-          .text('Batal', 'fact:cancel');
+          .text('Yes, Delete All', 'fact:clear_confirmed')
+          .text('Cancel', 'fact:cancel');
 
         await ctx.reply(
-          'Apakah kamu yakin ingin menghapus *semua* memori fakta tentang dirimu?',
+          'Are you sure you want to delete *all* memory facts about yourself?',
           {
             parse_mode: 'Markdown',
             reply_markup: keyboard,
@@ -117,7 +117,7 @@ export default {
           const factId = Number(data.slice('fact:del:'.length));
           if (factId) {
             deleteFact(ctx.from.id, factId);
-            await ctx.answerCallbackQuery({ text: `Fakta #${factId} dihapus.` }).catch(() => {});
+            await ctx.answerCallbackQuery({ text: `Fact #${factId} deleted.` }).catch(() => {});
           }
 
           const { text, keyboard } = renderMemoryView(ctx.from.id, p);
@@ -133,12 +133,12 @@ export default {
         if (data === 'fact:clear_prompt') {
           await ctx.answerCallbackQuery().catch(() => {});
           const confirmKb = new InlineKeyboard()
-            .text('Ya, Hapus Semua', 'fact:clear_confirmed')
-            .text('Batal', 'fact:cancel');
+            .text('Yes, Delete All', 'fact:clear_confirmed')
+            .text('Cancel', 'fact:cancel');
 
           await ctx
             .editMessageText(
-              'Apakah kamu yakin ingin menghapus *seluruh* fakta tentang dirimu yang kuingat?',
+              'Are you sure you want to delete *all* facts about you that I remember?',
               {
                 parse_mode: 'Markdown',
                 reply_markup: confirmKb,
@@ -150,11 +150,11 @@ export default {
 
         if (data === 'fact:clear_confirmed') {
           clearFacts(ctx.from.id);
-          await ctx.answerCallbackQuery({ text: 'Semua fakta dihapus.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'All facts deleted.' }).catch(() => {});
 
           const clearedText =
             p.strings?.factsCleared ??
-            'Semua ingatan fakta tentangmu sudah kuhapus bersih. (¬_¬)';
+            'All memory facts about you have been wiped clean. (¬_¬)';
 
           await ctx
             .editMessageText(clearedText, { parse_mode: 'Markdown' })
@@ -163,7 +163,7 @@ export default {
         }
 
         if (data === 'fact:cancel') {
-          await ctx.answerCallbackQuery({ text: 'Dibatalkan.' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Cancelled.' }).catch(() => {});
           const { text, keyboard } = renderMemoryView(ctx.from.id, p);
           await ctx
             .editMessageText(text, {

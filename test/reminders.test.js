@@ -212,14 +212,14 @@ describe('Reminders Time Parser (F-10) - 25+ Test Cases', () => {
     // 2026-11-01 sudah lewat dari fixedNow (4 Nov)
     assert.throws(
       () => parseReminderInput('2026-11-01 09:00 tes', tz, fixedNow),
-      /sudah terlewat/,
+      /already in the past/,
     );
   });
 
   it('27. menolak format input acak tanpa waktu yang valid', () => {
     assert.throws(
       () => parseReminderInput('besok tanpa jam tes', tz, fixedNow),
-      /tidak dikenali/,
+      /Unrecognized time format/,
     );
   });
 });

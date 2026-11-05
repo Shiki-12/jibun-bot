@@ -57,13 +57,13 @@ describe('F-30: Baca Gambar (Vision)', () => {
   describe('buildPhotoPlaceholder', () => {
     it('menghasilkan placeholder dengan caption jika caption tersedia', () => {
       const placeholder = buildPhotoPlaceholder('kucing tidur di kasur');
-      assert.equal(placeholder, '[user mengirim foto: kucing tidur di kasur]');
+      assert.equal(placeholder, '[user sent photo: kucing tidur di kasur]');
     });
 
     it('menghasilkan placeholder tanpa caption jika kosong atau hanya spasi', () => {
-      assert.equal(buildPhotoPlaceholder(''), '[user mengirim foto]');
-      assert.equal(buildPhotoPlaceholder('   '), '[user mengirim foto]');
-      assert.equal(buildPhotoPlaceholder(null), '[user mengirim foto]');
+      assert.equal(buildPhotoPlaceholder(''), '[user sent photo]');
+      assert.equal(buildPhotoPlaceholder('   '), '[user sent photo]');
+      assert.equal(buildPhotoPlaceholder(null), '[user sent photo]');
     });
   });
 
@@ -158,7 +158,7 @@ describe('F-30: Baca Gambar (Vision)', () => {
 
     it('menggunakan teks prompt fallback jika caption kosong', () => {
       const content = formatVisionUserContent('', 'data:image/jpeg;base64,abc123');
-      assert.equal(content[0].text, 'Foto apa ini? Tolong jelaskan.');
+      assert.equal(content[0].text, 'What is in this photo? Please explain.');
     });
   });
 
@@ -229,7 +229,7 @@ describe('F-30: Baca Gambar (Vision)', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Fitur Baca Gambar (Vision)'));
+      assert.ok(replies[0].text.includes('Image Analysis Feature (Vision)'));
       assert.ok(replies[0].text.includes('20 MB'));
     });
 
@@ -316,7 +316,7 @@ describe('F-30: Baca Gambar (Vision)', () => {
         assert.equal(isPrivate, true);
         assert.ok(extra.vision);
         assert.ok(extra.vision.imageUrl.startsWith('data:image/jpeg;base64,'));
-        assert.equal(extra.vision.placeholder, '[user mengirim foto: Kucingku lagi tidur nih]');
+        assert.equal(extra.vision.placeholder, '[user sent photo: Kucingku lagi tidur nih]');
       } finally {
         globalThis.fetch = origFetch;
       }

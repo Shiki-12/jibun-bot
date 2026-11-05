@@ -171,10 +171,7 @@ export function buildProactiveMessage({ userId, persona, tz = 'Asia/Jakarta', no
     return greetings.general[idx];
   }
 
-  const isEn = p.language === 'en' || p.id === 'jiang_cheng';
-  return isEn
-    ? "It has been unusually quiet all day. I'm checking to make sure nothing has gone wrong."
-    : 'Hei... seharian ini sepi banget. Cuma mau mastiin kamu baik-baik aja kok.';
+  return "It has been unusually quiet all day. I'm checking to make sure nothing has gone wrong.";
 }
 
 /**

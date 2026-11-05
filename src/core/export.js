@@ -155,28 +155,28 @@ export function deleteUserData(userId) {
 }
 
 /**
- * Teks kebijakan privasi dan pengelolaan data pengguna.
+ * Privacy policy and data management text in English.
  * @returns {string}
  */
 export function getPrivacyPolicyText() {
   return [
-    '*Kebijakan Privasi & Pengelolaan Data*',
+    '*Privacy Policy & Data Management*',
     '',
-    'Kami menghargai privasi dan kendali penuh atas data pribadimu:',
+    'We respect your privacy and full control over your personal data:',
     '',
-    '1. *Data Apa yang Disimpan?*',
-    '• Profil dasar Telegram (ID, nama, username) untuk personalisasi sapaan.',
-    '• Data yang kamu buat secara sadar: catatan (/note), to-do (/todo), pengingat (/remind), catatan pengeluaran (/catat), dan jurnal mood (/mood).',
-    '• Preferensi pengguna: zona waktu, kepribadian aktif, dan frekuensi GIF.',
+    '1. *What Data Is Stored?*',
+    '• Basic Telegram profile (ID, first name, username) for personalized greetings.',
+    '• User-created content: notes (/note), to-dos (/todo), reminders (/remind), expenses (/catat), and mood entries (/mood).',
+    '• User preferences: timezone, active personality, and GIF frequency.',
     '',
-    '2. *Di Mana Data Disimpan?*',
-    '• Seluruh data disimpan secara lokal pada database SQLite terenkripsi OS di server bot.',
-    '• Data kamu *TIDAK PERNAH* dijual, dibagikan, atau dipindahtangankan ke pihak ketiga mana pun.',
-    '• File foto/gambar yang dikirimkan untuk analisis AI *TIDAK PERNAH* disimpan ke disk atau database bot (hanya dikirimkan via memori langsung ke gateway model).',
+    '2. *Where Is Data Stored?*',
+    '• All data is stored locally in an SQLite database on the bot server.',
+    '• Your data is *NEVER* sold, shared, or transferred to any third party.',
+    '• Photos/images sent for AI vision analysis are *NEVER* stored to disk (streamed via memory directly to the model gateway).',
     '',
-    '3. *Hak & Kendali Penuh Pengguna:*',
-    '• `/export`: Unduh salinan seluruh data pribadimu kapan saja dalam format JSON standar.',
-    '• `/deleteme`: Hapus seluruh rekaman data pribadimu secara permanen dari server bot (konfirmasi dua langkah).',
-    '• `/forget`: Hapus riwayat percakapan dan ringkasan chat saat ini.',
+    '3. *Your Rights & Control:*',
+    '• `/export`: Download a full copy of your personal data anytime in JSON format.',
+    '• `/deleteme`: Permanently delete all your personal records from the bot (two-step confirmation).',
+    '• `/forget`: Clear recent conversation history and current chat summary.',
   ].join('\n');
 }

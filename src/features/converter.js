@@ -11,15 +11,15 @@ export default {
   commands: [
     {
       name: 'kurs',
-      description: 'Cek konversi kurs mata uang (/kurs 100 usd idr atau /kurs usd idr)',
+      description: 'Check currency exchange rates (/kurs 100 usd idr or /kurs usd idr)',
       handler: async (ctx) => {
         const rawArg = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
 
         if (!rawArg) {
           await ctx.reply(
-            '*Format perintah kurs:*\n' +
-              '• `/kurs <nominal> <dari> <ke>` (contoh: `/kurs 100 USD IDR`)\n' +
-              '• `/kurs <dari> <ke>` (contoh: `/kurs USD IDR` untuk nominal 1)',
+            '*Currency conversion format:*\n' +
+              '• `/kurs <amount> <from> <to>` (example: `/kurs 100 USD IDR`)\n' +
+              '• `/kurs <from> <to>` (example: `/kurs USD IDR` for amount of 1)',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -45,7 +45,7 @@ export default {
           }
         } else {
           await ctx.reply(
-            'Format tidak valid. Contoh: `/kurs 100 USD IDR` atau `/kurs USD IDR`',
+            'Invalid format. Example: `/kurs 100 USD IDR` or `/kurs USD IDR`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -57,30 +57,30 @@ export default {
           const conv = await convertCurrency(amount, fromCurr, toCurr);
 
           const replyText =
-            `*Konversi Mata Uang:*\n` +
+            `*Currency Conversion:*\n` +
             `*${formatCurrencyAmount(conv.amount)} ${conv.from}* = *${formatCurrencyAmount(conv.result)} ${conv.to}*\n\n` +
-            `• *Kurs Acuan:* 1 ${conv.from} = ${formatCurrencyAmount(conv.rate)} ${conv.to}\n` +
-            `• *Pembaruan:* ${conv.lastUpdateUtc}`;
+            `• *Exchange Rate:* 1 ${conv.from} = ${formatCurrencyAmount(conv.rate)} ${conv.to}\n` +
+            `• *Updated:* ${conv.lastUpdateUtc}`;
 
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error('Error saat konversi kurs:', err);
-          await ctx.reply(`Gagal konversi kurs: ${err.message}`);
+          console.error('Error during currency conversion:', err);
+          await ctx.reply(`Failed currency conversion: ${err.message}`);
         }
       },
     },
     {
       name: 'hitung',
-      description: 'Hitung ekspresi matematika (/hitung 15 * (4 + 2) ^ 2)',
+      description: 'Calculate math expression (/hitung 15 * (4 + 2) ^ 2)',
       handler: async (ctx) => {
         const expr = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
 
         if (!expr) {
           await ctx.reply(
-            '*Format kalkulator:*\n' +
-              'Gunakan `/hitung <ekspresi>`\n' +
-              'Contoh: `/hitung 15 * (4 + 2)` atau `/hitung 2 ^ 3 + 10 % 3`\n\n' +
-              '_Operator yang didukung: +, -, *, /, %, ^, dan tanda kurung ()_',
+            '*Calculator format:*\n' +
+              'Use `/hitung <expression>`\n' +
+              'Example: `/hitung 15 * (4 + 2)` or `/hitung 2 ^ 3 + 10 % 3`\n\n' +
+              '_Supported operators: +, -, *, /, %, ^, and parentheses ()_',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -89,29 +89,29 @@ export default {
         try {
           const result = evaluateMath(expr);
           await ctx.reply(
-            `*Hasil Perhitungan:*\n\`${expr}\` = *${result}*`,
+            `*Calculation Result:*\n\`${expr}\` = *${result}*`,
             { parse_mode: 'Markdown' },
           );
         } catch (err) {
-          await ctx.reply(`[Error] Gagal menghitung: ${err.message}`);
+          await ctx.reply(`[Error] Calculation failed: ${err.message}`);
         }
       },
     },
     {
       name: 'konversi',
-      description: 'Konversi satuan panjang, berat, suhu, dan volume (/konversi 5 km mil)',
+      description: 'Convert units of length, weight, temperature, and volume (/konversi 5 km mil)',
       handler: async (ctx) => {
         const rawArg = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
 
         if (!rawArg) {
           await ctx.reply(
-            '*Format konversi satuan:*\n' +
-              'Gunakan `/konversi <nilai> <dari> <ke>`\n\n' +
-              'Contoh:\n' +
-              '• Panjang: `/konversi 5 km mil` atau `/konversi 100 cm m`\n' +
-              '• Berat: `/konversi 2.5 kg lb` atau `/konversi 500 g ons`\n' +
-              '• Suhu: `/konversi 100 c f` atau `/konversi 300 k c`\n' +
-              '• Volume: `/konversi 1 gal l` atau `/konversi 500 ml cangkir`',
+            '*Unit conversion format:*\n' +
+              'Use `/konversi <value> <from> <to>`\n\n' +
+              'Examples:\n' +
+              '• Length: `/konversi 5 km mil` or `/konversi 100 cm m`\n' +
+              '• Weight: `/konversi 2.5 kg lb` or `/konversi 500 g ons`\n' +
+              '• Temperature: `/konversi 100 c f` or `/konversi 300 k c`\n' +
+              '• Volume: `/konversi 1 gal l` or `/konversi 500 ml cangkir`',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -121,7 +121,7 @@ export default {
         const tokens = rawArg.split(/\s+/).filter((t) => !['ke', 'to'].includes(t.toLowerCase()));
 
         if (tokens.length < 3) {
-          await ctx.reply('Format salah. Contoh penggunaan: `/konversi 5 km mil`', {
+          await ctx.reply('Invalid format. Usage example: `/konversi 5 km mil`', {
             parse_mode: 'Markdown',
           });
           return;
@@ -133,7 +133,7 @@ export default {
           const conv = convertUnit(valStr, fromUnit, toUnit);
 
           const replyText =
-            `*Konversi Satuan (${conv.category}):*\n` +
+            `*Unit Conversion (${conv.category}):*\n` +
             `*${conv.value} ${conv.from}* = *${conv.result} ${conv.to}*`;
 
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
@@ -148,24 +148,24 @@ export default {
     {
       name: 'CALC',
       promptHint:
-        'Hitung ekspresi matematika. Format: [CALC: ekspresi] (contoh: [CALC: 15 * (4 + 2)]). Keluarkan tag ini jika user meminta bantuan perhitungan.',
+        'Calculate math expression. Format: [CALC: expression] (example: [CALC: 15 * (4 + 2)]). Emit this tag when user asks for calculation assistance.',
       handle: async (ctx, args) => {
         const expr = args?.[0]?.trim();
         if (!expr) return;
         try {
           const result = evaluateMath(expr);
-          await ctx.reply(`*Hasil Perhitungan:*\n\`${expr}\` = *${result}*`, {
+          await ctx.reply(`*Calculation Result:*\n\`${expr}\` = *${result}*`, {
             parse_mode: 'Markdown',
           });
         } catch (err) {
-          console.error(`Gagal memproses tag [CALC: ${expr}]:`, err.message);
+          console.error(`Failed to process tag [CALC: ${expr}]:`, err.message);
         }
       },
     },
     {
       name: 'KURS',
       promptHint:
-        'Cek konversi kurs mata uang. Format: [KURS: nominal | mata_uang_asal | mata_uang_tujuan] (contoh: [KURS: 100 | USD | IDR]).',
+        'Check currency exchange rate. Format: [KURS: amount | from_currency | to_currency] (example: [KURS: 100 | USD | IDR]).',
       handle: async (ctx, args) => {
         if (!args || args.length < 2) return;
         let amount = 1;
@@ -184,19 +184,19 @@ export default {
         try {
           const conv = await convertCurrency(amount, fromCurr, toCurr);
           const replyText =
-            `*Konversi Mata Uang:*\n` +
+            `*Currency Conversion:*\n` +
             `*${formatCurrencyAmount(conv.amount)} ${conv.from}* = *${formatCurrencyAmount(conv.result)} ${conv.to}*\n\n` +
-            `• *Kurs Acuan:* 1 ${conv.from} = ${formatCurrencyAmount(conv.rate)} ${conv.to}`;
+            `• *Exchange Rate:* 1 ${conv.from} = ${formatCurrencyAmount(conv.rate)} ${conv.to}`;
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error(`Gagal memproses tag [KURS]:`, err.message);
+          console.error(`Failed to process tag [KURS]:`, err.message);
         }
       },
     },
     {
       name: 'CONVERT',
       promptHint:
-        'Konversi satuan ukuran. Format: [CONVERT: nilai | satuan_asal | satuan_tujuan] (contoh: [CONVERT: 5 | km | mil]).',
+        'Convert units of measurement. Format: [CONVERT: value | from_unit | to_unit] (example: [CONVERT: 5 | km | mil]).',
       handle: async (ctx, args) => {
         if (!args || args.length < 3) return;
         const val = args[0].trim();
@@ -206,11 +206,11 @@ export default {
         try {
           const conv = convertUnit(val, from, to);
           const replyText =
-            `*Konversi Satuan (${conv.category}):*\n` +
+            `*Unit Conversion (${conv.category}):*\n` +
             `*${conv.value} ${conv.from}* = *${conv.result} ${conv.to}*`;
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error(`Gagal memproses tag [CONVERT]:`, err.message);
+          console.error(`Failed to process tag [CONVERT]:`, err.message);
         }
       },
     },

@@ -1,11 +1,11 @@
 import { getDb } from './db.js';
 
 export const MOOD_LEVELS = {
-  1: { score: 1, label: 'Sangat Buruk', emoji: '(T_T)', bar: '█░░░░' },
-  2: { score: 2, label: 'Buruk', emoji: '(._.)', bar: '██░░░' },
-  3: { score: 3, label: 'Biasa Saja', emoji: '(-_-)', bar: '███░░' },
-  4: { score: 4, label: 'Baik', emoji: '(^_^)', bar: '████░' },
-  5: { score: 5, label: 'Sangat Baik', emoji: '(^▽^)', bar: '█████' },
+  1: { score: 1, label: 'Very Bad', emoji: '(T_T)', bar: '█░░░░' },
+  2: { score: 2, label: 'Bad', emoji: '(._.)', bar: '██░░░' },
+  3: { score: 3, label: 'Neutral', emoji: '(-_-)', bar: '███░░' },
+  4: { score: 4, label: 'Good', emoji: '(^_^)', bar: '████░' },
+  5: { score: 5, label: 'Very Good', emoji: '(^▽^)', bar: '█████' },
 };
 
 export const CRISIS_KEYWORDS = [
@@ -18,6 +18,10 @@ export const CRISIS_KEYWORDS = [
   'menyakiti diri',
   'self harm',
   'potong nadi',
+  'kill myself',
+  'want to die',
+  'end my life',
+  'cut my wrists',
 ];
 
 export function hasCrisisSigns(text) {
@@ -101,11 +105,11 @@ export function renderMoodWeekSummary(moods, tz = 'Asia/Jakarta') {
   let totalScore = 0;
   const lines = moods.map((m) => {
     totalScore += m.score;
-    const meta = MOOD_LEVELS[m.score] || { emoji: '(-_-)', bar: '███░░', label: 'Biasa' };
+    const meta = MOOD_LEVELS[m.score] || { emoji: '(-_-)', bar: '███░░', label: 'Neutral' };
 
     let dateLabel = m.date_str;
     try {
-      dateLabel = new Intl.DateTimeFormat('id-ID', {
+      dateLabel = new Intl.DateTimeFormat('en-US', {
         timeZone: tz,
         day: '2-digit',
         month: 'short',
@@ -119,10 +123,10 @@ export function renderMoodWeekSummary(moods, tz = 'Asia/Jakarta') {
   const avg = (totalScore / moods.length).toFixed(1);
 
   return (
-    `*Jurnal Mood 7 Hari Terakhir*\n\n` +
+    `*7-Day Mood Journal*\n\n` +
     `${lines.join('\n')}\n\n` +
-    `*Rata-rata:* *${avg}* / 5.0 (${moods.length} entri)\n\n` +
-    `_Catatan: Jurnal ini adalah catatan refleksi pribadi dan bukan pengganti diagnosis medis atau sesi terapi profesional._`
+    `*Average:* *${avg}* / 5.0 (${moods.length} entries)\n\n` +
+    `_Note: This journal is a personal reflection and not a substitute for professional medical diagnosis or therapy._`
   );
 }
 

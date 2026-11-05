@@ -147,7 +147,7 @@ describe('F-14: Memori Jangka Panjang & Ringkasan Percakapan', () => {
       ).run(TEST_CHAT, 'model', 'Wah lucunya si snowy!', Date.now());
 
       const mockGenerateReply = async ({ systemPrompt, userText }) => {
-        assert.ok(systemPrompt.includes('ATURAN KEAMANAN & PRIVASI'));
+        assert.ok(systemPrompt.includes('SAFETY & PRIVACY RULES'));
         assert.ok(userText.includes('snowy'));
         return '["Punya kucing persia bernama snowy"]';
       };
@@ -215,9 +215,9 @@ describe('F-14: Memori Jangka Panjang & Ringkasan Percakapan', () => {
         ctx,
       });
 
-      assert.ok(prompt.includes('## Ringkasan Percakapan Sebelumnya'));
+      assert.ok(prompt.includes('## Previous Conversation Summary'));
       assert.ok(prompt.includes('proyek bot Telegram'));
-      assert.ok(prompt.includes('## Hal yang Kamu Ketahui tentang User'));
+      assert.ok(prompt.includes('## Things You Know About the User'));
       assert.ok(prompt.includes('Suka kopi arabika'));
     });
   });
@@ -236,7 +236,7 @@ describe('F-14: Memori Jangka Panjang & Ringkasan Percakapan', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].text.includes('Fakta yang kuingat'));
+      assert.ok(replies[0].text.includes('Facts I remember about you'));
       assert.ok(replies[0].text.includes('programmer'));
       assert.ok(replies[0].opts.reply_markup);
     });
@@ -255,7 +255,7 @@ describe('F-14: Memori Jangka Panjang & Ringkasan Percakapan', () => {
       await cmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('kulupakan'));
+      assert.ok(replies[0].includes('forgotten'));
       assert.equal(getFacts(TEST_USER).length, 0);
     });
 
@@ -294,7 +294,7 @@ describe('F-14: Memori Jangka Panjang & Ringkasan Percakapan', () => {
 
       assert.equal(getFacts(TEST_USER).length, 0);
       assert.equal(edits.length, 1);
-      assert.ok(edits[0].text.includes('kuhapus'));
+      assert.ok(edits[0].text.includes('wiped') || edits[0].text.includes('cleared'));
     });
   });
 });

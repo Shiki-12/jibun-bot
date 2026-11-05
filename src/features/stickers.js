@@ -18,7 +18,7 @@ export default {
   commands: [
     {
       name: 'addsticker',
-      description: 'Tambah stiker reaksi bot (khusus admin)',
+      description: 'Add bot reaction sticker (admin only)',
       adminOnly: true,
       handler: async (ctx) => {
         const userId = ctx.from?.id;
@@ -33,7 +33,7 @@ export default {
         if (!moodArg || !isValidMood(moodArg)) {
           const listMoods = ALLOWED_MOODS.join(', ');
           await ctx.reply(
-            `Format salah! Gunakan: /addsticker <mood>\n\nPilihan mood yang tersedia:\n${listMoods}`,
+            `Invalid format! Usage: /addsticker <mood>\n\nAvailable mood options:\n${listMoods}`,
           );
           return;
         }
@@ -43,14 +43,14 @@ export default {
 
         const msg =
           ctx.persona?.strings?.stickerModeActive?.replace('{mood}', mood) ??
-          `Mode tambah stiker aktif untuk mood "${mood}".\nKirim satu atau beberapa stiker sekarang ke bot ini.\nKetik /cancelsticker jika sudah selesai.`;
+          `Sticker addition mode active for mood "${mood}".\nSend one or more stickers now to this bot.\nType /cancelsticker when finished.`;
         await ctx.reply(msg);
       },
     },
 
     {
       name: 'cancelsticker',
-      description: 'Batalkan mode tambah stiker',
+      description: 'Cancel sticker addition mode',
       adminOnly: true,
       handler: async (ctx) => {
         const userId = ctx.from?.id;
@@ -60,20 +60,20 @@ export default {
 
         const activeMode = getAdminAddStickerMode(userId);
         if (!activeMode) {
-          await ctx.reply('Kamu tidak sedang dalam mode tambah stiker.');
+          await ctx.reply('You are not currently in sticker addition mode.');
           return;
         }
         clearAdminAddStickerMode(userId);
         const msg =
           ctx.persona?.strings?.stickerModeCancelled ??
-          'Mode tambah stiker dibatalkan.';
+          'Sticker addition mode cancelled.';
         await ctx.reply(msg);
       },
     },
 
     {
       name: 'stickers',
-      description: 'Lihat koleksi stiker reaksi per mood',
+      description: 'View reaction sticker collection by mood',
       handler: async (ctx) => {
         const counts = getStickersCountByMood();
         const total = getTotalStickersCount();
@@ -81,19 +81,19 @@ export default {
         if (total === 0) {
           const emptyMsg =
             ctx.persona?.strings?.stickersEmpty ??
-            'Belum ada stiker yang tersimpan di bot ini.';
+            'No stickers saved in this bot yet.';
           const adminHint = isAdmin(ctx.from?.id)
-            ? '\n\nAdmin: Gunakan /addsticker <mood> untuk mulai mengoleksi stiker.'
+            ? '\n\nAdmin: Use /addsticker <mood> to start collecting stickers.'
             : '';
           await ctx.reply(emptyMsg + adminHint);
           return;
         }
 
-        const lines = counts.map((item) => `- *${item.mood}*: ${item.count} stiker`);
-        let response = `*Koleksi Stiker Reaksi*\n\n${lines.join('\n')}\n\n*Total:* ${total} stiker`;
+        const lines = counts.map((item) => `- *${item.mood}*: ${item.count} stickers`);
+        let response = `*Reaction Sticker Collection*\n\n${lines.join('\n')}\n\n*Total:* ${total} stickers`;
         if (isAdmin(ctx.from?.id)) {
           response +=
-            '\n\n_Admin tips:_\n- `/addsticker <mood>` untuk tambah stiker\n- `/delsticker <id>` untuk hapus stiker';
+            '\n\n_Admin tips:_\n- `/addsticker <mood>` to add stickers\n- `/delsticker <id>` to delete stickers';
         }
         await ctx.reply(response, { parse_mode: 'Markdown' });
       },
@@ -101,7 +101,7 @@ export default {
 
     {
       name: 'delsticker',
-      description: 'Hapus stiker berdasarkan ID (khusus admin)',
+      description: 'Delete sticker by ID (admin only)',
       adminOnly: true,
       handler: async (ctx) => {
         const userId = ctx.from?.id;
@@ -114,15 +114,15 @@ export default {
         const id = Number(parts[0]);
 
         if (!parts[0] || isNaN(id)) {
-          await ctx.reply('Format salah! Gunakan: /delsticker <id>');
+          await ctx.reply('Invalid format! Usage: /delsticker <id>');
           return;
         }
 
         const deleted = deleteSticker(id);
         if (deleted) {
-          await ctx.reply(`Stiker #${id} berhasil dihapus.`);
+          await ctx.reply(`Sticker #${id} deleted.`);
         } else {
-          await ctx.reply(`Stiker #${id} tidak ditemukan.`);
+          await ctx.reply(`Sticker #${id} not found.`);
         }
       },
     },
@@ -135,7 +135,7 @@ export default {
       maxArgs: 1,
       maxArgLength: 50,
       promptHint:
-        'Kirim stiker reaksi sesuai mood (senang, kesal, malu, sedih, bingung, kaget, semangat, lelah). Format: [STICKER: mood]. Gunakan hanya sesekali. JANGAN pernah gunakan bersamaan dengan [GIF: ...] dalam satu balasan.',
+        'Send reaction sticker matching mood (senang, kesal, malu, sedih, bingung, kaget, semangat, lelah). Format: [STICKER: mood]. Use only occasionally. NEVER use together with [GIF: ...] in a single reply.',
       handle: async (ctx, args) => {
         const mood = args[0];
         const sticker = getRandomStickerByMood(mood);
@@ -143,7 +143,7 @@ export default {
           try {
             await ctx.replyWithSticker(sticker.file_id);
           } catch (err) {
-            console.error(`Gagal mengirim stiker [${mood}]:`, err.message);
+            console.error(`Failed to send sticker [${mood}]:`, err.message);
           }
         }
       },

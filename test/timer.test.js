@@ -44,26 +44,26 @@ describe('F-43: Timer dan Pomodoro', () => {
     });
 
     it('menolak format durasi yang tidak valid, kosong, nol, atau negatif', () => {
-      assert.throws(() => parseTimerDuration(''), /tidak boleh kosong/);
-      assert.throws(() => parseTimerDuration(null), /tidak boleh kosong/);
-      assert.throws(() => parseTimerDuration('-5m'), /tidak boleh negatif/);
-      assert.throws(() => parseTimerDuration('0m'), /tidak valid/);
-      assert.throws(() => parseTimerDuration('0'), /harus lebih dari 0/);
-      assert.throws(() => parseTimerDuration('kucing'), /tidak valid/);
+      assert.throws(() => parseTimerDuration(''), /cannot be empty/);
+      assert.throws(() => parseTimerDuration(null), /cannot be empty/);
+      assert.throws(() => parseTimerDuration('-5m'), /cannot be negative/);
+      assert.throws(() => parseTimerDuration('0m'), /Invalid duration/);
+      assert.throws(() => parseTimerDuration('0'), /must be greater than 0/);
+      assert.throws(() => parseTimerDuration('kucing'), /Invalid duration/);
     });
 
     it('menolak durasi melebihi batas maksimal 24 jam', () => {
-      assert.throws(() => parseTimerDuration('25j'), /maksimal 24 jam/);
-      assert.throws(() => parseTimerDuration('1500m'), /maksimal 24 jam/);
+      assert.throws(() => parseTimerDuration('25j'), /Maximum timer duration is 24 hours/);
+      assert.throws(() => parseTimerDuration('1500m'), /Maximum timer duration is 24 hours/);
     });
 
     it('formatDuration menghasilkan teks representasi waktu yang rapi', () => {
-      assert.equal(formatDuration(0), '0 detik');
-      assert.equal(formatDuration(30_000), '30 detik');
-      assert.equal(formatDuration(60_000), '1 menit');
-      assert.equal(formatDuration(90_000), '1 menit 30 detik');
-      assert.equal(formatDuration(3600_000), '1 jam');
-      assert.equal(formatDuration(5400_000), '1 jam 30 menit');
+      assert.equal(formatDuration(0), '0 seconds');
+      assert.equal(formatDuration(30_000), '30 seconds');
+      assert.equal(formatDuration(60_000), '1 minute');
+      assert.equal(formatDuration(90_000), '1 minute 30 seconds');
+      assert.equal(formatDuration(3600_000), '1 hour');
+      assert.equal(formatDuration(5400_000), '1 hour 30 minutes');
     });
   });
 
@@ -133,7 +133,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       startPomodoro({ chatId: TEST_CHAT_TIMER, userId: TEST_USER_TIMER });
       assert.throws(
         () => startPomodoro({ chatId: TEST_CHAT_TIMER, userId: TEST_USER_TIMER }),
-        /Sesi Pomodoro sudah berjalan di chat ini/,
+        /Pomodoro session already running in this chat/,
       );
     });
 
@@ -145,7 +145,7 @@ describe('F-43: Timer dan Pomodoro', () => {
             userId: TEST_USER_TIMER,
             workMin: 0,
           }),
-        /Durasi fokus/,
+        /Focus \(work\) duration/,
       );
       assert.throws(
         () =>
@@ -154,7 +154,7 @@ describe('F-43: Timer dan Pomodoro', () => {
             userId: TEST_USER_TIMER,
             breakMin: 70,
           }),
-        /Durasi istirahat/,
+        /Break duration/,
       );
       assert.throws(
         () =>
@@ -163,7 +163,7 @@ describe('F-43: Timer dan Pomodoro', () => {
             userId: TEST_USER_TIMER,
             cycles: 20,
           }),
-        /Jumlah siklus Pomodoro/,
+        /Number of Pomodoro cycles/,
       );
     });
 
@@ -247,7 +247,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       const count = await processPendingReminders(mockBot, now + 65_000);
       assert.equal(count, 1);
       assert.equal(messagesSent.length, 1);
-      assert.ok(messagesSent[0].text.includes('Timer Selesai'));
+      assert.ok(messagesSent[0].text.includes('Timer Finished'));
       assert.ok(messagesSent[0].text.includes('Air mendidih'));
       assert.equal(messagesSent[0].options?.reply_markup, undefined);
 
@@ -281,7 +281,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       // 1. Simulasikan 25 menit berlalu
       const count = await processPendingReminders(mockBot, now + 25 * 60_000);
       assert.equal(count, 1);
-      assert.ok(messagesSent[0].text.includes('Waktu Fokus Selesai'));
+      assert.ok(messagesSent[0].text.includes('Focus Time Completed'));
 
       // Baris pertama sudah 'sent', baris kedua (break) berstatus 'pending'
       const pendingRow = db
@@ -305,7 +305,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       };
 
       await timerCmd.handler(ctx);
-      assert.ok(replyText.includes('Tidak ada timer'));
+      assert.ok(replyText.includes('No active timers'));
     });
 
     it('/timer membuat timer baru saat diberi durasi', async () => {
@@ -321,8 +321,8 @@ describe('F-43: Timer dan Pomodoro', () => {
       };
 
       await timerCmd.handler(ctx);
-      assert.ok(replyText.includes('Timer Dimulai'));
-      assert.ok(replyText.includes('15 menit'));
+      assert.ok(replyText.includes('Timer Started'));
+      assert.ok(replyText.includes('15 minutes'));
       assert.ok(replyText.includes('Rebus ayam'));
 
       const active = getActiveTimers(TEST_CHAT_TIMER);
@@ -348,7 +348,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       };
 
       await timerCmd.handler(ctx);
-      assert.ok(replyText.includes('Daftar Timer Aktif'));
+      assert.ok(replyText.includes('Active Timers List'));
       assert.ok(replyText.includes('Oven'));
     });
 
@@ -371,7 +371,7 @@ describe('F-43: Timer dan Pomodoro', () => {
       };
 
       await cancelCmd.handler(ctx);
-      assert.ok(replyText.includes('berhasil dibatalkan'));
+      assert.ok(replyText.includes('successfully cancelled'));
       assert.equal(getActiveTimers(TEST_CHAT_TIMER).length, 0);
     });
 
@@ -391,18 +391,18 @@ describe('F-43: Timer dan Pomodoro', () => {
 
       // 1. Mulai
       await pomCmd.handler(ctx);
-      assert.ok(replyText.includes('Sesi Pomodoro Dimulai'));
-      assert.ok(replyText.includes('30 menit'));
+      assert.ok(replyText.includes('Pomodoro Session Started'));
+      assert.ok(replyText.includes('30 minutes'));
 
       // 2. Status
       ctx.message.text = '/pomodoro status';
       await pomCmd.handler(ctx);
-      assert.ok(replyText.includes('Status Pomodoro'));
+      assert.ok(replyText.includes('Pomodoro Status'));
       assert.ok(replyText.includes('1/3'));
 
       // 3. /stop
       await stopCmd.handler(ctx);
-      assert.ok(replyText.includes('telah dihentikan'));
+      assert.ok(replyText.includes('has been stopped'));
       assert.equal(getActivePomodoro(TEST_CHAT_TIMER), null);
     });
 
@@ -420,8 +420,8 @@ describe('F-43: Timer dan Pomodoro', () => {
       };
 
       await tag.handle(ctx, ['20m', 'rebus telur']);
-      assert.ok(replyText.includes('Timer Dimulai'));
-      assert.ok(replyText.includes('20 menit'));
+      assert.ok(replyText.includes('Timer Started'));
+      assert.ok(replyText.includes('20 minutes'));
       assert.ok(replyText.includes('rebus telur'));
     });
 
@@ -440,12 +440,12 @@ describe('F-43: Timer dan Pomodoro', () => {
 
       // Start
       await tag.handle(ctx, ['start', '25', '5', '4']);
-      assert.ok(replyText.includes('Sesi Pomodoro Dimulai'));
+      assert.ok(replyText.includes('Pomodoro Session Started'));
       assert.ok(getActivePomodoro(TEST_CHAT_TIMER));
 
       // Stop
       await tag.handle(ctx, ['stop']);
-      assert.ok(replyText.includes('telah dihentikan'));
+      assert.ok(replyText.includes('has been stopped'));
       assert.equal(getActivePomodoro(TEST_CHAT_TIMER), null);
     });
   });

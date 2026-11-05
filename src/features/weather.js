@@ -11,7 +11,7 @@ export default {
   commands: [
     {
       name: 'kota',
-      description: 'Atur kota domisili default (/kota <nama_kota>)',
+      description: 'Set default home city (/kota <city_name>)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const rawArg = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
@@ -20,12 +20,12 @@ export default {
           const currentCity = getSetting(ctx, 'city');
           if (currentCity) {
             await ctx.reply(
-              `Kota domisili kamu saat ini: *${currentCity}*.\nKetik \`/kota <nama_baru>\` untuk mengubah.`,
+              `Your current home city: *${currentCity}*.\nType \`/kota <new_city>\` to update.`,
               { parse_mode: 'Markdown' },
             );
           } else {
             await ctx.reply(
-              'Belum ada kota yang kamu atur.\nKetik `/kota <nama_kota>` (contoh: `/kota Bandung`).',
+              'No home city configured yet.\nType `/kota <city_name>` (example: `/kota Bandung`).',
               { parse_mode: 'Markdown' },
             );
           }
@@ -40,7 +40,7 @@ export default {
           if (!geo) {
             const notFoundMsg =
               p.strings?.cityNotFound?.replace('{city}', rawArg) ??
-              `Kota "${rawArg}" tidak ditemukan! Coba periksa kembali ejaan nama kotanya.`;
+              `City "${rawArg}" not found! Please check the spelling.`;
             await ctx.reply(notFoundMsg);
             return;
           }
@@ -49,19 +49,19 @@ export default {
 
           const template =
             p.strings?.citySaved ??
-            'Kota domisili berhasil diatur ke *{city}*. Sekarang kamu bisa langsung ketik `/cuaca`.';
+            'Home city successfully set to *{city}*. You can now use `/cuaca`.';
           const replyText = template.replace('{city}', geo.name);
 
           await ctx.reply(replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error('Error saat mengatur kota:', err);
-          await ctx.reply('Terjadi kesalahan saat memeriksa nama kota. Coba lagi sebentar lagi.');
+          console.error('Error setting city:', err);
+          await ctx.reply('An error occurred while verifying the city name. Please try again later.');
         }
       },
     },
     {
       name: 'cuaca',
-      description: 'Cek prakiraan cuaca kota (/cuaca [nama_kota])',
+      description: 'Check weather forecast for a city (/cuaca [city_name])',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
         const rawArg = ctx.message?.text?.split(/\s+/).slice(1).join(' ').trim();
@@ -69,9 +69,9 @@ export default {
 
         if (!targetCity) {
           await ctx.reply(
-            'Kamu belum mengatur kota domisili!\n' +
-              'Gunakan `/cuaca <nama_kota>` (contoh: `/cuaca Yogyakarta`)\n' +
-              'atau simpan kotamu dengan `/kota <nama_kota>`.',
+            'You have not set your home city yet!\n' +
+              'Use `/cuaca <city_name>` (example: `/cuaca Yogyakarta`)\n' +
+              'or save your city with `/kota <city_name>`.',
             { parse_mode: 'Markdown' },
           );
           return;
@@ -84,7 +84,7 @@ export default {
           if (!weather) {
             const notFoundMsg =
               p.strings?.cityNotFound?.replace('{city}', targetCity) ??
-              `Kota "${targetCity}" tidak ditemukan. Coba cek ejaannya lagi ya!`;
+              `City "${targetCity}" not found. Please verify the spelling.`;
             await ctx.reply(notFoundMsg);
             return;
           }
@@ -96,10 +96,10 @@ export default {
 
           await ctx.reply(report, { parse_mode: 'Markdown' });
         } catch (err) {
-          console.error('Error saat mengambil cuaca:', err);
+          console.error('Error fetching weather:', err);
           const errMsg =
             p.strings?.weatherError ??
-            'Gagal mengambil data cuaca saat ini (koneksi timeout). Coba beberapa saat lagi ya!';
+            'Failed to fetch weather data (connection timeout). Please try again shortly.';
           await ctx.reply(errMsg);
         }
       },
@@ -110,7 +110,7 @@ export default {
     {
       name: 'WEATHER',
       promptHint:
-        'Cek kondisi cuaca saat ini untuk kota tertentu. Format: [WEATHER: nama_kota] (contoh: [WEATHER: Jakarta]). Keluarkan tag ini jika user bertanya cuaca suatu kota.',
+        'Check current weather conditions for a specified city. Format: [WEATHER: city_name] (example: [WEATHER: Jakarta]). Emit this tag when user inquires about weather.',
       handle: async (ctx, args) => {
         const city = args?.[0]?.trim();
         if (!city) return;
@@ -125,7 +125,7 @@ export default {
             await ctx.reply(report, { parse_mode: 'Markdown' });
           }
         } catch (err) {
-          console.error(`Gagal memproses tag [WEATHER: ${city}]:`, err.message);
+          console.error(`Failed processing [WEATHER: ${city}] tag:`, err.message);
         }
       },
     },

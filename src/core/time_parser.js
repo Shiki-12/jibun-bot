@@ -11,6 +11,20 @@ const DAY_MAP = {
   jumat: 5,
   sabtu: 6,
   minggu: 7,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+  sunday: 7,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+  sun: 7,
 };
 
 /**
@@ -138,10 +152,10 @@ export function computeNextDue(dueAt, repeat, tz = 'Asia/Jakarta', nowMs = Date.
 }
 
 /**
- * Format timestamp ke tampilan teks user-friendly dalam bahasa Indonesia.
+ * Format timestamp into user-friendly text in English.
  */
 export function formatReminderTime(epochMs, tz = 'Asia/Jakarta') {
-  const formatter = new Intl.DateTimeFormat('id-ID', {
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
     weekday: 'short',
     day: '2-digit',
@@ -156,11 +170,11 @@ export function formatReminderTime(epochMs, tz = 'Asia/Jakarta') {
 }
 
 /**
- * Parse teks perintah /remind atau argumen tag natural menjadi { dueAt, repeat, text }.
+ * Parse /remind text or natural tag argument into { dueAt, repeat, text }.
  */
 export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now()) {
   if (!rawInput || typeof rawInput !== 'string') {
-    throw new Error('Format perintah pengingat tidak boleh kosong.');
+    throw new Error('Reminder input cannot be empty.');
   }
 
   const str = rawInput.trim();
@@ -172,21 +186,21 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
   );
   if (isoMatch) {
     const dueAt = Date.parse(isoMatch[1]);
-    if (isNaN(dueAt)) throw new Error('Format ISO 8601 tidak valid.');
+    if (isNaN(dueAt)) throw new Error('Invalid ISO 8601 format.');
     if (dueAt < now - 60_000) {
-      throw new Error('Waktu pengingat sudah terlewat di masa lalu.');
+      throw new Error('Reminder time is already in the past.');
     }
     const text = isoMatch[2].trim();
     return { dueAt, repeat: null, text };
   }
 
-  // 2. Berulang: tiap hari HH:mm
-  const tiapHariMatch = str.match(/^tiap\s+hari\s+(\d{1,2}):(\d{2})\s*(.*)$/i);
+  // 2. Berulang: tiap hari / every day / daily HH:mm
+  const tiapHariMatch = str.match(/^(?:tiap\s+hari|every\s+day|daily)\s+(\d{1,2}):(\d{2})\s*(.*)$/i);
   if (tiapHariMatch) {
     const hour = Number(tiapHariMatch[1]);
     const minute = Number(tiapHariMatch[2]);
     const text = tiapHariMatch[3].trim();
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
     let targetParts = { ...nowParts, hour, minute, second: 0 };
     let dueAt = zonedPartsToUtcMs(targetParts, tz);
@@ -197,9 +211,9 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     return { dueAt, repeat: 'daily', text };
   }
 
-  // 3. Berulang: tiap [senin..minggu] HH:mm
+  // 3. Berulang: tiap / every [weekday] HH:mm
   const tiapHariTertentuMatch = str.match(
-    /^tiap\s+(senin|selasa|rabu|kamis|jumat|sabtu|minggu)\s+(\d{1,2}):(\d{2})\s*(.*)$/i,
+    /^(?:tiap|every)\s+(senin|selasa|rabu|kamis|jumat|sabtu|minggu|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\s+(\d{1,2}):(\d{2})\s*(.*)$/i,
   );
   if (tiapHariTertentuMatch) {
     const dayName = tiapHariTertentuMatch[1].toLowerCase();
@@ -208,7 +222,7 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     const minute = Number(tiapHariTertentuMatch[3]);
     const text = tiapHariTertentuMatch[4].trim();
 
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
     // Hitung weekday hari ini di tz
     const todayZoned = new Date(zonedPartsToUtcMs(nowParts, tz));
@@ -229,26 +243,26 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     return { dueAt, repeat: `weekly:${targetWeekday}`, text };
   }
 
-  // 4. Berulang: tiap N jam / menit
+  // 4. Berulang: tiap / every N jam / menit / hours / mins
   const tiapDurasiMatch = str.match(
-    /^tiap\s+(\d+)\s*(menit|jam|min|sec|j|m|h|s)\s*(.*)$/i,
+    /^(?:tiap|every)\s+(\d+)\s*(menit|jam|min|sec|j|m|h|s|hours?|mins?|secs?)\s*(.*)$/i,
   );
   if (tiapDurasiMatch) {
     const count = Number(tiapDurasiMatch[1]);
     const unit = tiapDurasiMatch[2].toLowerCase();
     const text = tiapDurasiMatch[3].trim();
 
-    const isHour = ['j', 'jam', 'h'].includes(unit);
+    const isHour = ['j', 'jam', 'h', 'hour', 'hours'].includes(unit);
     const sec = isHour ? count * 3600 : count * 60;
-    if (sec <= 0) throw new Error('Durasi pengulangan harus lebih dari 0.');
+    if (sec <= 0) throw new Error('Repeat duration must be greater than 0.');
 
     const dueAt = now + sec * 1000;
     return { dueAt, repeat: `every:${sec}`, text };
   }
 
-  // 5. Berulang: tiap tgl N [HH:mm]
+  // 5. Berulang: tiap tgl N / every Nth [HH:mm]
   const tiapTglMatch = str.match(
-    /^tiap\s+tgl\s+(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?\s*(.*)$/i,
+    /^(?:tiap\s+tgl|every\s+(?:the\s+)?day)\s+(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?\s*(.*)$/i,
   );
   if (tiapTglMatch) {
     const targetDay = Number(tiapTglMatch[1]);
@@ -256,8 +270,8 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     const minute = tiapTglMatch[3] ? Number(tiapTglMatch[3]) : 0;
     const text = tiapTglMatch[4].trim();
 
-    if (targetDay < 1 || targetDay > 31) throw new Error('Tanggal tidak valid (1-31).');
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (targetDay < 1 || targetDay > 31) throw new Error('Invalid day (1-31).');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
     let targetParts = { ...nowParts, day: targetDay, hour, minute, second: 0 };
     let dueAt = zonedPartsToUtcMs(targetParts, tz);
@@ -274,22 +288,22 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     return { dueAt, repeat: `monthly:${targetDay}`, text };
   }
 
-  // 6. Relatif gabungan (misal 1j 30m, 10m, 2j, 30 detik)
-  const relativeRegex = /^((?:\d+\s*(?:menit|detik|jam|min|sec|j|m|d|h|s)\s*)+)(.*)$/i;
+  // 6. Relatif gabungan (misal 1j 30m, 10m, 2h, 30s)
+  const relativeRegex = /^((?:\d+\s*(?:menit|detik|jam|min|sec|j|m|d|h|s|hours?|mins?|secs?)\s*)+)(.*)$/i;
   const relMatch = str.match(relativeRegex);
   if (relMatch) {
     const relTokens = relMatch[1];
     const text = relMatch[2].trim();
     let totalMs = 0;
 
-    const unitRegex = /(\d+)\s*(menit|detik|jam|min|sec|j|m|d|h|s)/gi;
+    const unitRegex = /(\d+)\s*(menit|detik|jam|min|sec|j|m|d|h|s|hours?|mins?|secs?)/gi;
     let match;
     while ((match = unitRegex.exec(relTokens)) !== null) {
       const val = Number(match[1]);
       const u = match[2].toLowerCase();
-      if (['j', 'jam', 'h'].includes(u)) totalMs += val * 3600_000;
-      else if (['m', 'menit', 'min'].includes(u)) totalMs += val * 60_000;
-      else if (['d', 'detik', 's', 'sec'].includes(u)) totalMs += val * 1000;
+      if (['j', 'jam', 'h', 'hour', 'hours'].includes(u)) totalMs += val * 3600_000;
+      else if (['m', 'menit', 'min', 'mins'].includes(u)) totalMs += val * 60_000;
+      else if (['d', 'detik', 's', 'sec', 'secs'].includes(u)) totalMs += val * 1000;
     }
 
     if (totalMs > 0) {
@@ -298,17 +312,17 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     }
   }
 
-  // 7. Relatif hari: besok HH:mm / lusa HH:mm / hari ini HH:mm
-  const dayRelMatch = str.match(/^(besok|lusa|hari\s+ini)\s+(\d{1,2}):(\d{2})\s*(.*)$/i);
+  // 7. Relatif hari: besok / tomorrow / lusa / hari ini / today HH:mm
+  const dayRelMatch = str.match(/^(besok|tomorrow|lusa|hari\s+ini|today)\s+(\d{1,2}):(\d{2})\s*(.*)$/i);
   if (dayRelMatch) {
     const dayWord = dayRelMatch[1].toLowerCase().replace(/\s+/, ' ');
     const hour = Number(dayRelMatch[2]);
     const minute = Number(dayRelMatch[3]);
     const text = dayRelMatch[4].trim();
 
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
-    const addCount = dayWord === 'besok' ? 1 : dayWord === 'lusa' ? 2 : 0;
+    const addCount = (dayWord === 'besok' || dayWord === 'tomorrow') ? 1 : dayWord === 'lusa' ? 2 : 0;
     let targetParts = addDays(nowParts, addCount);
     targetParts.hour = hour;
     targetParts.minute = minute;
@@ -316,7 +330,7 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
 
     const dueAt = zonedPartsToUtcMs(targetParts, tz);
     if (dueAt < now - 60_000) {
-      throw new Error('Waktu pengingat sudah terlewat di masa lalu.');
+      throw new Error('Reminder time is already in the past.');
     }
     return { dueAt, repeat: null, text };
   }
@@ -331,7 +345,7 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     const minute = Number(dateMatch[3]);
     const text = dateMatch[4].trim();
 
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
     let year, month, day;
     if (dateStr.includes('-') && dateStr.indexOf('-') === 4) {
@@ -350,7 +364,7 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
 
     const dueAt = zonedPartsToUtcMs({ year, month, day, hour, minute, second: 0 }, tz);
     if (dueAt < now - 60_000) {
-      throw new Error('Waktu pengingat sudah terlewat di masa lalu.');
+      throw new Error('Reminder time is already in the past.');
     }
     return { dueAt, repeat: null, text };
   }
@@ -362,7 +376,7 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
     const minute = Number(timeOnlyMatch[2]);
     const text = timeOnlyMatch[3].trim();
 
-    if (hour > 23 || minute > 59) throw new Error('Jam atau menit tidak valid.');
+    if (hour > 23 || minute > 59) throw new Error('Invalid hour or minute.');
 
     let targetParts = { ...nowParts, hour, minute, second: 0 };
     let dueAt = zonedPartsToUtcMs(targetParts, tz);
@@ -377,6 +391,6 @@ export function parseReminderInput(rawInput, tz = 'Asia/Jakarta', now = Date.now
   }
 
   throw new Error(
-    'Format waktu tidak dikenali. Contoh: 10m, 2j, 17:30, besok 07:00, tiap hari 06:00',
+    'Unrecognized time format. Examples: 10m, 2h, 17:30, tomorrow 07:00, every day 06:00',
   );
 }

@@ -5,70 +5,76 @@
  */
 
 export const WMO_CODES = {
-  0: { description: 'Cerah', type: 'clear' },
-  1: { description: 'Cerah Berawan', type: 'clear' },
-  2: { description: 'Sebagian Berawan', type: 'cloudy' },
-  3: { description: 'Berawan Tebal', type: 'cloudy' },
-  45: { description: 'Berkabut', type: 'cloudy' },
-  48: { description: 'Kabut Tebal', type: 'cloudy' },
-  51: { description: 'Gerimis Ringan', type: 'rain' },
-  53: { description: 'Gerimis Sedang', type: 'rain' },
-  55: { description: 'Gerimis Lebat', type: 'rain' },
-  56: { description: 'Gerimis Dingin', type: 'rain' },
-  57: { description: 'Gerimis Dingin Lebat', type: 'rain' },
-  61: { description: 'Hujan Ringan', type: 'rain' },
-  63: { description: 'Hujan Sedang', type: 'rain' },
-  65: { description: 'Hujan Lebat', type: 'rain' },
-  66: { description: 'Hujan Es Ringan', type: 'rain' },
-  67: { description: 'Hujan Es Lebat', type: 'rain' },
-  71: { description: 'Salju Ringan', type: 'snow' },
-  73: { description: 'Salju Sedang', type: 'snow' },
-  75: { description: 'Salju Lebat', type: 'snow' },
-  77: { description: 'Butiran Salju', type: 'snow' },
-  80: { description: 'Hujan Rintik', type: 'rain' },
-  81: { description: 'Hujan Deras', type: 'rain' },
-  82: { description: 'Hujan Sangat Deras', type: 'rain' },
-  85: { description: 'Hujan Salju Ringan', type: 'snow' },
-  86: { description: 'Hujan Salju Lebat', type: 'snow' },
-  95: { description: 'Badai Petir', type: 'thunder' },
-  96: { description: 'Badai Petir dengan Hujan Es', type: 'thunder' },
-  99: { description: 'Badai Petir Hebat', type: 'thunder' },
+  0: { description: 'Clear', type: 'clear' },
+  1: { description: 'Mainly Clear', type: 'clear' },
+  2: { description: 'Partly Cloudy', type: 'cloudy' },
+  3: { description: 'Overcast', type: 'cloudy' },
+  45: { description: 'Fog', type: 'cloudy' },
+  48: { description: 'Depositing Rime Fog', type: 'cloudy' },
+  51: { description: 'Light Drizzle', type: 'rain' },
+  53: { description: 'Moderate Drizzle', type: 'rain' },
+  55: { description: 'Dense Drizzle', type: 'rain' },
+  56: { description: 'Light Freezing Drizzle', type: 'rain' },
+  57: { description: 'Dense Freezing Drizzle', type: 'rain' },
+  61: { description: 'Slight Rain', type: 'rain' },
+  63: { description: 'Moderate Rain', type: 'rain' },
+  65: { description: 'Heavy Rain', type: 'rain' },
+  66: { description: 'Light Freezing Rain', type: 'rain' },
+  67: { description: 'Heavy Freezing Rain', type: 'rain' },
+  71: { description: 'Slight Snow Fall', type: 'snow' },
+  73: { description: 'Moderate Snow Fall', type: 'snow' },
+  75: { description: 'Heavy Snow Fall', type: 'snow' },
+  77: { description: 'Snow Grains', type: 'snow' },
+  80: { description: 'Slight Rain Showers', type: 'rain' },
+  81: { description: 'Moderate Rain Showers', type: 'rain' },
+  82: { description: 'Violent Rain Showers', type: 'rain' },
+  85: { description: 'Slight Snow Showers', type: 'snow' },
+  86: { description: 'Heavy Snow Showers', type: 'snow' },
+  95: { description: 'Thunderstorm', type: 'thunder' },
+  96: { description: 'Thunderstorm with Slight Hail', type: 'thunder' },
+  99: { description: 'Thunderstorm with Heavy Hail', type: 'thunder' },
 };
 
 export function interpretWeatherCode(code) {
-  return WMO_CODES[code] ?? { description: 'Berawan', type: 'cloudy' };
+  return WMO_CODES[code] ?? { description: 'Cloudy', type: 'cloudy' };
 }
 
 export const WEATHER_ADVICE = {
   tsundere: {
-    rain: 'Hujan tuh! Jangan lupa bawa payung, awas kalau sampai kehujanan dan sakit, bikin repot aja! ( `_´ )',
-    hot: 'Panas banget hari ini! Minum air yang banyak, jangan sampai dehidrasi di jalan! B-bukan berarti aku khawatir ya! ( `_´ )',
-    cold: 'Dingin banget di luar! Pakai jaket tebal napa, jangan sok kuat! (¬_¬)',
-    pleasant: 'Cuacanya lagi cerah dan lumayan adem. Manfaatin hari ini buat beraktivitas, jangan cuma rebahan! (¬_¬)',
+    rain: "It's raining! Take an umbrella with you. Don't catch a cold and cause trouble! ( `_´ )",
+    hot: "It's scorching hot today! Drink plenty of water and don't get dehydrated on the road! I-it's not like I'm worried about you or anything! ( `_´ )",
+    cold: "It's freezing outside! Put on a thick jacket, don't act tough! (¬_¬)",
+    pleasant: "The weather is clear and pleasant. Make good use of today instead of just slacking off! (¬_¬)",
   },
   manis: {
-    rain: 'Kemungkinan akan turun hujan. Jangan lupa siapkan payung dan jaga kesehatanmu ya. (o^ ^o)',
-    hot: 'Cuacanya cukup terik. Jangan lupa banyak minum air putih agar tetap terhidrasi ya. (^_^)',
-    cold: 'Udaranya cukup dingin. Kenakan pakaian yang hangat agar tidak masuk angin ya. (o^ ^o)',
-    pleasant: 'Cuaca hari ini cukup cerah dan sejuk. Waktu yang baik untuk beraktivitas di luar. (^_^)',
+    rain: 'Rain is likely today. Please remember to carry an umbrella and take good care of your health. (o^ ^o)',
+    hot: 'The sun is quite intense today. Drink plenty of water to stay hydrated. (^_^)',
+    cold: 'The air is quite cold. Please wear warm clothes so you do not catch a cold. (o^ ^o)',
+    pleasant: 'Today is clear and pleasant. A wonderful day for outdoor activities. (^_^)',
   },
   ceria: {
-    rain: 'Ada potensi hujan nih! Jangan lupa bawa payung atau jas hujan yaaa! (ง •̀_•́)ง',
-    hot: 'Waaah panas dan cerah banget! Pakai tabir surya dan bawa botol minum yaaa! (^▽^)',
-    cold: 'Dingiiin! Enak nih pakai jaket hangat atau minum cokelat panas! (^_^)',
-    pleasant: 'Yaaay cuacanya bersahabat banget! Waktu yang pas buat jalan-jalan atau produktif bareng! (^▽^)',
+    rain: 'Rain is on the way! Remember your umbrella or raincoat! (ง •̀_•́)ง',
+    hot: 'Waaah, so bright and sunny! Put on sunscreen and carry your water bottle! (^▽^)',
+    cold: 'Brrr, so chilly! Great time for a warm jacket or hot cocoa! (^_^)',
+    pleasant: 'Yaaay, the weather is wonderful! Perfect time for a walk or getting things done together! (^▽^)',
   },
   sarkas: {
-    rain: 'Hujan. Kalau kamu sengaja tidak membawa payung lalu basah kuyup, jangan salahkan cuaca. (-_-)',
-    hot: 'Suhunya cukup untuk memanggang roti di aspal. Tetap di dalam ruangan jika tidak ada urusan darurat. (-_-)',
-    cold: 'Udara dingin. Pilihan tepat untuk pura-pura sibuk sambil berselimut. (-_-)',
-    pleasant: 'Cuacanya bagus. Tidak ada alasan menyalahkan alam semesta untuk kemalasanmu hari ini. (-_-)',
+    rain: 'Rain. If you intentionally leave your umbrella behind and get drenched, do not blame the weather. (-_-)',
+    hot: 'Hot enough to bake toast on asphalt. Stay inside unless you have an actual emergency. (-_-)',
+    cold: 'Freezing outside. A great excuse to wrap yourself in blankets and pretend to be busy. (-_-)',
+    pleasant: 'Decent weather. You have officially run out of cosmic excuses for your laziness today. (-_-)',
+  },
+  jiang_cheng: {
+    rain: 'Rain is falling. Take an umbrella and see that you do not wander around soaking wet.',
+    hot: 'The heat is heavy. Stay hydrated and finish your duties without collapsing.',
+    cold: 'The chill is sharp. Put on proper layers before stepping out.',
+    pleasant: 'Clear skies. Focus on your tasks and do not waste the day.',
   },
   custom: {
-    rain: 'Kemungkinan hujan. Disarankan membawa payung atau jas hujan saat bepergian.',
-    hot: 'Cuaca panas terik. Jaga hidrasi tubuh dengan minum air yang cukup.',
-    cold: 'Udara cukup dingin. Kenakan pakaian hangat yang nyaman.',
-    pleasant: 'Cuaca hari ini bersahabat untuk beraktivitas.',
+    rain: 'Rain is expected. Carrying an umbrella or raincoat is recommended.',
+    hot: 'Hot and sunny weather. Drink plenty of water to stay hydrated.',
+    cold: 'Cool temperatures. Dressing warmly is recommended.',
+    pleasant: 'Pleasant weather for daily activities.',
   },
 };
 
@@ -216,7 +222,7 @@ export async function getWeatherData(
  * Format laporan cuaca lengkap untuk dikirimkan ke chat Telegram.
  */
 export function formatWeatherReport({ weather, personaId = 'tsundere' }) {
-  if (!weather) return 'Data cuaca tidak tersedia.';
+  if (!weather) return 'Weather data is currently unavailable.';
 
   const advice = getWeatherAdvice({
     code: weather.weatherCode,
@@ -227,23 +233,23 @@ export function formatWeatherReport({ weather, personaId = 'tsundere' }) {
 
   const tag =
     weather.conditionType === 'rain'
-      ? '[Hujan]'
+      ? '[Rain]'
       : weather.conditionType === 'thunder'
-      ? '[Badai]'
+      ? '[Thunderstorm]'
       : weather.conditionType === 'snow'
-      ? '[Salju]'
+      ? '[Snow]'
       : weather.temp >= 33
-      ? '[Cerah]'
-      : '[Berawan]';
+      ? '[Sunny]'
+      : '[Cloudy]';
 
   return (
-    `${tag} *Cuaca di ${weather.locationTitle}:*\n` +
-    `• *Kondisi:* ${weather.conditionText}\n` +
-    `• *Suhu:* ${weather.temp}°C (terasa seperti ${weather.feelsLike}°C)\n` +
-    `• *Rentang:* ${weather.minTemp}°C - ${weather.maxTemp}°C\n` +
-    `• *Kelembapan:* ${weather.humidity}%\n` +
-    `• *Peluang Hujan:* ${weather.rainProb}%\n` +
-    `• *Kecepatan Angin:* ${weather.windSpeed} km/jam\n\n` +
+    `${tag} *Weather in ${weather.locationTitle}:*\n` +
+    `• *Condition:* ${weather.conditionText}\n` +
+    `• *Temperature:* ${weather.temp}°C (feels like ${weather.feelsLike}°C)\n` +
+    `• *Range:* ${weather.minTemp}°C - ${weather.maxTemp}°C\n` +
+    `• *Humidity:* ${weather.humidity}%\n` +
+    `• *Precipitation Chance:* ${weather.rainProb}%\n` +
+    `• *Wind Speed:* ${weather.windSpeed} km/h\n\n` +
     `_"${advice}"_`
   );
 }

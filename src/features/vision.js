@@ -5,15 +5,15 @@ export default {
   commands: [
     {
       name: 'vision',
-      description: 'Petunjuk fitur baca gambar (vision)',
+      description: 'Image analysis guide (vision)',
       handler: async (ctx) => {
         const text =
-          '*Fitur Baca Gambar (Vision)*\n\n' +
-          'Kirimkan foto langsung ke chat (dengan atau tanpa caption).\n' +
-          '• Di chat pribadi: Bot akan langsung melihat dan merespons fotomu.\n' +
-          '• Di grup: Mention bot atau balas (reply) foto bot agar bot merespons.\n' +
-          '• Batas ukuran file: maksimal *20 MB*.\n\n' +
-          '_Karakter bot akan mengomentari fotomu sesuai kepribadiannya!_';
+          '*Image Analysis Feature (Vision)*\n\n' +
+          'Send a photo directly to the chat (with or without a caption).\n' +
+          '• In private chat: The bot inspects and responds to your photo immediately.\n' +
+          '• In groups: Mention the bot or reply to the bot with a photo.\n' +
+          '• File size limit: maximum *20 MB*.\n\n' +
+          '_The bot persona will comment on your photo according to its character!_';
         await ctx.reply(text, { parse_mode: 'Markdown' });
       },
     },
@@ -46,7 +46,7 @@ export default {
       if (!bestPhoto) {
         const tooLarge =
           ctx.persona?.strings?.visionTooLarge ??
-          'Ukuran foto terlalu besar atau tidak valid (maksimal 20 MB).';
+          'Photo size is too large or invalid (maximum 20 MB).';
         await ctx.reply(tooLarge);
         return;
       }
@@ -63,7 +63,7 @@ export default {
         const placeholder = isPrivate
           ? buildPhotoPlaceholder(caption)
           : `${ctx.from?.first_name || 'User'}: ${
-              caption ? `[mengirim foto: ${caption}]` : '[mengirim foto]'
+              caption ? `[sent photo: ${caption}]` : '[sent photo]'
             }`;
 
         const replyOptions = isPrivate
@@ -71,19 +71,19 @@ export default {
           : { reply_parameters: { message_id: ctx.message.message_id } };
 
         if (typeof handleChatMessage === 'function') {
-          await handleChatMessage(ctx, caption || 'Foto apa ini?', isPrivate, replyOptions, {
+          await handleChatMessage(ctx, caption || 'What is in this photo?', isPrivate, replyOptions, {
             vision: {
               imageUrl: imageDataUrl,
-              caption: caption || 'Foto apa ini? Tolong jelaskan.',
+              caption: caption || 'What is in this photo? Please explain.',
               placeholder,
             },
           });
         }
       } catch (err) {
-        console.error('Error saat memproses foto:', err.message);
+        console.error('Error processing photo:', err.message);
         const errMsg =
           ctx.persona?.strings?.visionDownloadFailed ??
-          'Gagal mengunduh foto dari Telegram... Coba kirim ulang ya!';
+          'Failed to download photo from Telegram. Please try sending it again.';
         await ctx.reply(errMsg).catch(() => {});
       }
     });

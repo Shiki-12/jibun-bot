@@ -108,7 +108,7 @@ describe('F-12: Catatan / Notes', () => {
 
     it('renderNotesPage menampilkan teks kosong jika tidak ada catatan', () => {
       const res = renderNotesPage(TEST_USER, 1);
-      assert.ok(res.text.includes('belum memiliki catatan'));
+      assert.ok(res.text.includes('do not have any saved notes'));
       assert.equal(res.keyboard, null);
     });
 
@@ -119,7 +119,7 @@ describe('F-12: Catatan / Notes', () => {
 
       const res = renderNotesPage(TEST_USER, 1);
       assert.ok(res.keyboard);
-      assert.ok(res.text.includes('Daftar Catatan'));
+      assert.ok(res.text.includes('Notes List'));
     });
   });
 
@@ -136,7 +136,7 @@ describe('F-12: Catatan / Notes', () => {
       await noteCmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].msg.includes('Catatan disimpan'));
+      assert.ok(replies[0].msg.includes('Note saved'));
       assert.ok(replies[0].msg.includes('#liburan'));
     });
 
@@ -157,7 +157,7 @@ describe('F-12: Catatan / Notes', () => {
       await noteCmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].msg.includes(`Catatan #${id}`));
+      assert.ok(replies[0].msg.includes(`Note #${id}`));
       assert.ok(replies[0].msg.includes('kunci lemari'));
     });
 
@@ -178,7 +178,7 @@ describe('F-12: Catatan / Notes', () => {
       await delCmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('berhasil dihapus'));
+      assert.ok(replies[0].includes('deleted'));
       assert.equal(getNoteById(TEST_USER, id), undefined);
     });
 
@@ -199,7 +199,7 @@ describe('F-12: Catatan / Notes', () => {
       await findCmd.handler(ctx);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Hasil Pencarian'));
+      assert.ok(replies[0].includes('Search Results'));
       assert.ok(replies[0].includes('wifi kantor'));
     });
 
@@ -214,7 +214,7 @@ describe('F-12: Catatan / Notes', () => {
       await noteTag.handle(ctx, ['alamat pengiriman paket di bandung #kirim']);
 
       assert.equal(replies.length, 1);
-      assert.ok(replies[0].includes('Catatan Disimpan'));
+      assert.ok(replies[0].includes('Note Saved'));
       assert.ok(replies[0].includes('#kirim'));
 
       const found = findNotes(TEST_USER, 'bandung');
