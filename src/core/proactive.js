@@ -171,7 +171,10 @@ export function buildProactiveMessage({ userId, persona, tz = 'Asia/Jakarta', no
     return greetings.general[idx];
   }
 
-  return 'Hei... seharian ini sepi banget. Cuma mau mastiin kamu baik-baik aja kok.';
+  const isEn = p.language === 'en' || p.id === 'jiang_cheng';
+  return isEn
+    ? "It has been unusually quiet all day. I'm checking to make sure nothing has gone wrong."
+    : 'Hei... seharian ini sepi banget. Cuma mau mastiin kamu baik-baik aja kok.';
 }
 
 /**
@@ -226,7 +229,9 @@ export async function processProactiveMessages(bot, now = Date.now(), db = getDb
     // 4. Susun pesan proaktif in-character
     let persona;
     try {
-      persona = getPersonality(process.env.PERSONALITY || 'tsundere');
+      const uRow = db.prepare('SELECT persona FROM users WHERE id = ?').get(row.user_id);
+      const targetId = uRow?.persona || process.env.PERSONALITY || 'tsundere';
+      persona = getPersonality(targetId);
     } catch {
       persona = { strings: {} };
     }

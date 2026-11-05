@@ -144,8 +144,9 @@ export function buildMorningMessage({ userId, tz = 'Asia/Jakarta', persona, now 
 
   // 6. Bagian cuaca (jika disediakan)
   if (weatherSummary) {
+    const isEn = p.language === 'en' || p.id === 'jiang_cheng';
     lines.push('');
-    lines.push('*Prakiraan Cuaca Hari Ini:*');
+    lines.push(isEn ? "*Today's Weather Forecast:*" : '*Prakiraan Cuaca Hari Ini:*');
     lines.push(weatherSummary);
   }
 
@@ -155,6 +156,7 @@ export function buildMorningMessage({ userId, tz = 'Asia/Jakarta', persona, now 
 export function buildNightMessage({ userId, tz = 'Asia/Jakarta', persona, now = Date.now() }) {
   const db = getDb();
   const p = persona ?? { strings: {} };
+  const isEn = p.language === 'en' || p.id === 'jiang_cheng';
   const parts = getZonedParts(new Date(now), tz);
 
   const startOfDayMs = zonedPartsToUtcMs(
@@ -217,7 +219,11 @@ export function buildNightMessage({ userId, tz = 'Asia/Jakarta', persona, now = 
   try {
     const todayMood = getTodayMood(userId, tz, now);
     if (!todayMood) {
-      lines.push('\n_Luangkan waktu sejenak untuk check-in perasaanmu malam ini: ketik_ `/mood`.');
+      lines.push(
+        isEn
+          ? '\n_Take a moment to check in with your feelings tonight: type_ `/mood`.'
+          : '\n_Luangkan waktu sejenak untuk check-in perasaanmu malam ini: ketik_ `/mood`.'
+      );
     }
   } catch {}
 
@@ -284,7 +290,10 @@ export async function processDailySchedules(bot, now = Date.now()) {
 
     let persona;
     try {
-      persona = getPersonality(process.env.PERSONALITY || 'tsundere');
+      const uRow = db.prepare('SELECT persona FROM users WHERE id = ?').get(s.user_id);
+      const cRow = db.prepare('SELECT persona FROM chats WHERE id = ?').get(s.chat_id);
+      const targetId = cRow?.persona || uRow?.persona || process.env.PERSONALITY || 'tsundere';
+      persona = getPersonality(targetId);
     } catch {
       persona = { strings: {} };
     }
@@ -367,24 +376,30 @@ export default {
       description: 'Atur pesan sapaan & ringkasan pagi (/morning 07:00 atau /morning off)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
+        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const arg = ctx.message.text.split(/\s+/)[1]?.trim();
 
         if (!arg) {
           const sched = getSchedule(ctx.chat.id, ctx.from.id, 'morning');
           if (!sched || sched.status !== 'active') {
             await ctx.reply(
-              'Pesan pagi saat ini *mati*.\nKetik `/morning 07:00` untuk menyalakan jam 07:00.',
+              isEn
+                ? 'Morning message is currently *off*.\nType `/morning 07:00` to turn on at 07:00.'
+                : 'Pesan pagi saat ini *mati*.\nKetik `/morning 07:00` untuk menyalakan jam 07:00.',
               { parse_mode: 'Markdown' },
             );
           } else {
             await ctx.reply(
-              `Pesan pagi aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/morning off\` untuk mematikan.`,
+              isEn
+                ? `Morning message active at *${sched.time}* (${sched.tz}).\nType \`/morning off\` to disable.`
+                : `Pesan pagi aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/morning off\` untuk mematikan.`,
               { parse_mode: 'Markdown' },
             );
           }
           return;
         }
 
+        const typeLabel = isEn ? 'morning' : 'pagi';
         if (arg.toLowerCase() === 'off') {
           disableSchedule({
             chatId: ctx.chat.id,
@@ -392,16 +407,19 @@ export default {
             type: 'morning',
           });
           const replyText =
-            p.strings?.scheduleOff?.replace('{type}', 'pagi') ??
-            'Jadwal pesan pagi sudah dimatikan.';
+            p.strings?.scheduleOff?.replace('{type}', typeLabel) ??
+            (isEn ? 'Morning message schedule disabled.' : 'Jadwal pesan pagi sudah dimatikan.');
           await ctx.reply(replyText);
           return;
         }
 
         if (!isValidTimeFormat(arg)) {
-          await ctx.reply('Format jam tidak valid! Gunakan format HH:mm (contoh: `/morning 07:00`)', {
-            parse_mode: 'Markdown',
-          });
+          await ctx.reply(
+            isEn
+              ? 'Invalid time format! Use HH:mm format (example: `/morning 07:00`)'
+              : 'Format jam tidak valid! Gunakan format HH:mm (contoh: `/morning 07:00`)',
+            { parse_mode: 'Markdown' },
+          );
           return;
         }
 
@@ -416,9 +434,11 @@ export default {
 
         const replyTemplate =
           p.strings?.scheduleSet ??
-          'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).';
+          (isEn
+            ? '{type} message schedule set for *{time}* ({tz}).'
+            : 'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).');
         const replyText = replyTemplate
-          .replace('{type}', 'pagi')
+          .replace('{type}', typeLabel)
           .replace('{time}', arg)
           .replace('{tz}', tz);
 
@@ -430,24 +450,30 @@ export default {
       description: 'Atur pesan sapaan & ringkasan malam (/night 22:30 atau /night off)',
       handler: async (ctx) => {
         const p = ctx.persona ?? { strings: {} };
+        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const arg = ctx.message.text.split(/\s+/)[1]?.trim();
 
         if (!arg) {
           const sched = getSchedule(ctx.chat.id, ctx.from.id, 'night');
           if (!sched || sched.status !== 'active') {
             await ctx.reply(
-              'Pesan malam saat ini *mati*.\nKetik `/night 22:30` untuk menyalakan jam 22:30.',
+              isEn
+                ? 'Night message is currently *off*.\nType `/night 22:30` to turn on at 22:30.'
+                : 'Pesan malam saat ini *mati*.\nKetik `/night 22:30` untuk menyalakan jam 22:30.',
               { parse_mode: 'Markdown' },
             );
           } else {
             await ctx.reply(
-              `Pesan malam aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/night off\` untuk mematikan.`,
+              isEn
+                ? `Night message active at *${sched.time}* (${sched.tz}).\nType \`/night off\` to disable.`
+                : `Pesan malam aktif jam *${sched.time}* (${sched.tz}).\nKetik \`/night off\` untuk mematikan.`,
               { parse_mode: 'Markdown' },
             );
           }
           return;
         }
 
+        const typeLabel = isEn ? 'night' : 'malam';
         if (arg.toLowerCase() === 'off') {
           disableSchedule({
             chatId: ctx.chat.id,
@@ -455,16 +481,19 @@ export default {
             type: 'night',
           });
           const replyText =
-            p.strings?.scheduleOff?.replace('{type}', 'malam') ??
-            'Jadwal pesan malam sudah dimatikan.';
+            p.strings?.scheduleOff?.replace('{type}', typeLabel) ??
+            (isEn ? 'Night message schedule disabled.' : 'Jadwal pesan malam sudah dimatikan.');
           await ctx.reply(replyText);
           return;
         }
 
         if (!isValidTimeFormat(arg)) {
-          await ctx.reply('Format jam tidak valid! Gunakan format HH:mm (contoh: `/night 22:30`)', {
-            parse_mode: 'Markdown',
-          });
+          await ctx.reply(
+            isEn
+              ? 'Invalid time format! Use HH:mm format (example: `/night 22:30`)'
+              : 'Format jam tidak valid! Gunakan format HH:mm (contoh: `/night 22:30`)',
+            { parse_mode: 'Markdown' },
+          );
           return;
         }
 
@@ -479,9 +508,11 @@ export default {
 
         const replyTemplate =
           p.strings?.scheduleSet ??
-          'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).';
+          (isEn
+            ? '{type} message schedule set for *{time}* ({tz}).'
+            : 'Jadwal pesan {type} berhasil diatur pada jam *{time}* ({tz}).');
         const replyText = replyTemplate
-          .replace('{type}', 'malam')
+          .replace('{type}', typeLabel)
           .replace('{time}', arg)
           .replace('{tz}', tz);
 
@@ -492,25 +523,39 @@ export default {
       name: 'schedules',
       description: 'Lihat status jadwal pesan pagi & malam terjadwal',
       handler: async (ctx) => {
+        const p = ctx.persona ?? { strings: {} };
+        const isEn = p.language === 'en' || p.id === 'jiang_cheng';
         const rows = getAllUserSchedules(ctx.chat.id, ctx.from.id);
         const morning = rows.find((r) => r.type === 'morning');
         const night = rows.find((r) => r.type === 'night');
 
-        const morningStatus =
-          morning && morning.status === 'active'
-            ? `Aktif jam *${morning.time}* (${morning.tz})`
-            : 'Mati (`/morning 07:00`)';
+        let morningStatus;
+        if (morning && morning.status === 'active') {
+          morningStatus = isEn
+            ? `Active at *${morning.time}* (${morning.tz})`
+            : `Aktif jam *${morning.time}* (${morning.tz})`;
+        } else {
+          morningStatus = isEn ? 'Off (`/morning 07:00`)' : 'Mati (`/morning 07:00`)';
+        }
 
-        const nightStatus =
-          night && night.status === 'active'
-            ? `Aktif jam *${night.time}* (${night.tz})`
-            : 'Mati (`/night 22:30`)';
+        let nightStatus;
+        if (night && night.status === 'active') {
+          nightStatus = isEn
+            ? `Active at *${night.time}* (${night.tz})`
+            : `Aktif jam *${night.time}* (${night.tz})`;
+        } else {
+          nightStatus = isEn ? 'Off (`/night 22:30`)' : 'Mati (`/night 22:30`)';
+        }
 
-        const text =
-          `*Jadwal Pesan Terjadwal:*\n\n` +
-          `• *Pagi:* ${morningStatus}\n` +
-          `• *Malam:* ${nightStatus}\n\n` +
-          `_Ketik \`/morning off\` atau \`/night off\` untuk mematikan._`;
+        const text = isEn
+          ? `*Scheduled Messages:*\n\n` +
+            `• *Morning:* ${morningStatus}\n` +
+            `• *Night:* ${nightStatus}\n\n` +
+            `_Type \`/morning off\` or \`/night off\` to disable._`
+          : `*Jadwal Pesan Terjadwal:*\n\n` +
+            `• *Pagi:* ${morningStatus}\n` +
+            `• *Malam:* ${nightStatus}\n\n` +
+            `_Ketik \`/morning off\` atau \`/night off\` untuk mematikan._`;
 
         await ctx.reply(text, { parse_mode: 'Markdown' });
       },

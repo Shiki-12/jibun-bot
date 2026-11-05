@@ -29,14 +29,20 @@ export default {
       handler: async (ctx) => {
         const persona = resolvePersona(ctx);
         const isGroup = ctx.chat?.type && ctx.chat.type !== 'private';
+        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
         if (isGroup) {
           const botUser = ctx.me?.username ? `@${ctx.me.username}` : 'bot';
-          const groupIntro =
-            `${persona.greeting}\n\n` +
-            '*Informasi Penggunaan Grup:*\n' +
-            `• Bot hanya merespons jika di-mention (${botUser}) atau pesannya di-reply (kecuali admin menyalakan /chatty on).\n` +
-            '• Bot menyimpan penyangga 200 pesan teks terakhir di grup ini untuk fitur ringkasan /rangkum_grup.\n' +
-            '• Pastikan *Group Privacy* dimatikan di @BotFather atau jadikan bot Admin grup agar bot dapat membaca pesan untuk fitur ringkasan.';
+          const groupIntro = isEn
+            ? `${persona.greeting}\n\n` +
+              '*Group Usage Information:*\n' +
+              `• The bot only responds when mentioned (${botUser}) or replied to (unless admin enables /chatty on).\n` +
+              '• The bot keeps a 200-message buffer in this group for the /rangkum_grup summary feature.\n' +
+              '• Ensure *Group Privacy* is disabled via @BotFather or promote the bot to Group Admin so it can read messages for summaries.'
+            : `${persona.greeting}\n\n` +
+              '*Informasi Penggunaan Grup:*\n' +
+              `• Bot hanya merespons jika di-mention (${botUser}) atau pesannya di-reply (kecuali admin menyalakan /chatty on).\n` +
+              '• Bot menyimpan penyangga 200 pesan teks terakhir di grup ini untuk fitur ringkasan /rangkum_grup.\n' +
+              '• Pastikan *Group Privacy* dimatikan di @BotFather atau jadikan bot Admin grup agar bot dapat membaca pesan untuk fitur ringkasan.';
           await ctx.reply(groupIntro, { parse_mode: 'Markdown' });
           return;
         }
@@ -61,8 +67,11 @@ export default {
       description: 'Info tentang persona dan bot',
       handler: async (ctx) => {
         const { persona, id, source } = getEffectivePersona(ctx);
+        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
         const meta = persona?.category === 'exclusive' ? ` [Exclusive: ${persona.source ?? 'Fan-inspired'}]` : '';
-        const text = `Personality aktif: ${persona.name} (${id})${meta} [sumber: ${source}]\nTersedia: ${listPersonalities().join(', ')}`;
+        const text = isEn
+          ? `Active personality: ${persona.name} (${id})${meta} [source: ${source}]\nAvailable: ${listPersonalities().join(', ')}`
+          : `Personality aktif: ${persona.name} (${id})${meta} [sumber: ${source}]\nTersedia: ${listPersonalities().join(', ')}`;
         await ctx.reply(text);
       },
     },
@@ -74,25 +83,26 @@ export default {
         const allCommands = activeCommandsGetter();
         const userId = ctx.from?.id;
         const userIsAdmin = isAdmin(userId);
+        const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
 
         const publicCommands = allCommands.filter((c) => !c.adminOnly);
         const adminCommands = allCommands.filter((c) => c.adminOnly);
 
         const header =
-          persona.strings?.helpHeader ?? 'Daftar perintah yang bisa kamu pakai:';
+          persona.strings?.helpHeader ?? (isEn ? 'List of available commands:' : 'Daftar perintah yang bisa kamu pakai:');
         const footer = persona.strings?.helpFooter ?? '';
 
         const publicList = publicCommands
-          .map((c) => `/${c.name} — ${c.description || 'Tidak ada deskripsi'}`)
+          .map((c) => `/${c.name} — ${c.description || (isEn ? 'No description' : 'Tidak ada deskripsi')}`)
           .join('\n');
 
         const parts = [header, '', publicList];
 
         if (userIsAdmin && adminCommands.length > 0) {
           const adminList = adminCommands
-            .map((c) => `/${c.name} — ${c.description || 'Tidak ada deskripsi'}`)
+            .map((c) => `/${c.name} — ${c.description || (isEn ? 'No description' : 'Tidak ada deskripsi')}`)
             .join('\n');
-          parts.push('', 'Khusus admin:', adminList);
+          parts.push('', isEn ? 'Admin only:' : 'Khusus admin:', adminList);
         }
 
         if (footer) parts.push('', footer);

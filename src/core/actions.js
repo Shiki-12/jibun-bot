@@ -118,9 +118,10 @@ export function extractActions(raw = '', registeredTags = []) {
  * Format waktu saat ini sesuai zona waktu user untuk disisipkan ke prompt.
  * Contoh: "Rabu, 04 Nov 2026, 20.12 WIB (Asia/Jakarta)"
  */
-export function formatNowContext(ctx, date = new Date()) {
+export function formatNowContext(ctx, date = new Date(), persona = null) {
+  const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
   const tz = getSetting(ctx, 'tz', 'Asia/Jakarta');
-  const lang = getSetting(ctx, 'lang', 'id');
+  const lang = isEn ? 'en' : getSetting(ctx, 'lang', 'id');
   const locale = lang === 'en' ? 'en-US' : 'id-ID';
 
   let formattedTime = '';
@@ -142,6 +143,9 @@ export function formatNowContext(ctx, date = new Date()) {
   }
 
   const userName = ctx?.from?.first_name || 'User';
+  if (isEn) {
+    return `Current time: ${formattedTime} (${tz})\nUser name: ${userName}`;
+  }
   return `Sekarang: ${formattedTime} (${tz})\nNama user: ${userName}`;
 }
 
@@ -164,13 +168,14 @@ export const GLOBAL_SAFETY_RULES = `## Aturan Keselamatan & Krisis (Wajib & Prio
  * Gabungkan system prompt dasar persona dengan petunjuk tag aktif dan konteks waktu.
  */
 export function buildSystemPrompt({ persona, tags = [], ctx }) {
+  const isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
   let prompt = persona?.systemPrompt ?? '';
 
   const gifFreq = getSetting(ctx, 'gif_freq', 'normal');
   prompt = applyGifSetting(prompt, gifFreq);
 
   // Pastikan aturan keselamatan selalu ada di setiap system prompt
-  if (!prompt.includes('SEJIWA') || !prompt.includes('119 (ekstensi 8)')) {
+  if (!prompt.includes('SEJIWA') || !prompt.includes('119')) {
     prompt += `\n\n${GLOBAL_SAFETY_RULES}`;
   }
 
@@ -179,7 +184,9 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
     try {
       const summary = getSummary(ctx.chat.id, persona?.id);
       if (summary) {
-        prompt += `\n\n## Ringkasan Percakapan Sebelumnya\n${summary}`;
+        prompt += isEn
+          ? `\n\n## Previous Conversation Summary\n${summary}`
+          : `\n\n## Ringkasan Percakapan Sebelumnya\n${summary}`;
       }
     } catch {}
   }
@@ -189,7 +196,9 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
     try {
       const facts = getFacts(ctx.from.id, 15);
       if (facts.length > 0) {
-        prompt += `\n\n## Hal yang Kamu Ketahui tentang User\n${facts.map((f) => `- ${f.fact}`).join('\n')}`;
+        prompt += isEn
+          ? `\n\n## Things You Know About the User\n${facts.map((f) => `- ${f.fact}`).join('\n')}`
+          : `\n\n## Hal yang Kamu Ketahui tentang User\n${facts.map((f) => `- ${f.fact}`).join('\n')}`;
       }
     } catch {}
   }
@@ -201,7 +210,9 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
       const aff = getAffinity(ctx.from.id, tz, Date.now(), persona?.id);
       const title = persona?.affinityTitles?.[aff.level] ?? aff.title;
       const instruction = persona?.affinityInstructions?.[aff.level] ?? aff.promptInstruction;
-      prompt += `\n\n## Level Kedekatan (Affinity)\nStatus hubungan saat ini: Level ${aff.level} - "${title}" (${aff.points} poin).\nInstruksi nada bicara: ${instruction}`;
+      prompt += isEn
+        ? `\n\n## Relationship Level (Affinity)\nCurrent status: Level ${aff.level} - "${title}" (${aff.points} points).\nTone instruction: ${instruction}`
+        : `\n\n## Level Kedekatan (Affinity)\nStatus hubungan saat ini: Level ${aff.level} - "${title}" (${aff.points} poin).\nInstruksi nada bicara: ${instruction}`;
     } catch {}
   }
 
@@ -211,13 +222,19 @@ export function buildSystemPrompt({ persona, tags = [], ctx }) {
     .map((t) => `- [${t.name}: ...]: ${t.promptHint}`);
 
   if (activeHints.length > 0) {
-    prompt += `\n\n## Tag Aksi Tersedia\nSertakan satu atau lebih tag aksi di baris paling akhir balasan bila relevan:\n${activeHints.join(
-      '\n',
-    )}\nAturan: Jangan pernah menyebutkan atau menjelaskan tag aksi kepada user. Tulis tag di akhir balasan. JANGAN pernah mengeluarkan tag [GIF: ...] dan [STICKER: ...] secara bersamaan dalam satu balasan (pilih salah satu atau tidak sama sekali).`;
+    prompt += isEn
+      ? `\n\n## Available Action Tags\nInclude one or more action tags at the very end of your response if relevant:\n${activeHints.join(
+          '\n',
+        )}\nRules: Never mention or explain action tags to the user. Write tags at the end of the reply. NEVER output [GIF: ...] and [STICKER: ...] together in the same response (choose one or none).`
+      : `\n\n## Tag Aksi Tersedia\nSertakan satu atau lebih tag aksi di baris paling akhir balasan bila relevan:\n${activeHints.join(
+          '\n',
+        )}\nAturan: Jangan pernah menyebutkan atau menjelaskan tag aksi kepada user. Tulis tag di akhir balasan. JANGAN pernah mengeluarkan tag [GIF: ...] dan [STICKER: ...] secara bersamaan dalam satu balasan (pilih salah satu atau tidak sama sekali).`;
   }
 
-  const nowContext = formatNowContext(ctx);
-  prompt += `\n\n## Konteks Saat Ini\n${nowContext}`;
+  const nowContext = formatNowContext(ctx, new Date(), persona);
+  prompt += isEn
+    ? `\n\n## Current Context\n${nowContext}`
+    : `\n\n## Konteks Saat Ini\n${nowContext}`;
 
   return prompt;
 }

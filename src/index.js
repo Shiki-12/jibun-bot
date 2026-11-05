@@ -78,7 +78,9 @@ bot.use(async (ctx, next) => {
   // 4. Cek mode maintenance (F-60)
   if (isMaintenanceMode() && !isAdmin(ctx.from?.id)) {
     if (ctx.chat?.type === 'private') {
-      await ctx.reply('Bot sedang dalam mode pemeliharaan (maintenance). Silakan coba lagi nanti ya!').catch(() => {});
+      const p = ctx.persona ?? persona;
+      const isEn = p.language === 'en' || p.id === 'jiang_cheng';
+      await ctx.reply(isEn ? 'Bot is undergoing maintenance. Try again later.' : 'Bot sedang dalam mode pemeliharaan (maintenance). Silakan coba lagi nanti ya!').catch(() => {});
     }
     return;
   }
@@ -87,7 +89,8 @@ bot.use(async (ctx, next) => {
   if (!isUserAllowed(ctx.from?.id)) {
     if (ctx.chat?.type === 'private') {
       const p = ctx.persona ?? persona;
-      const unauth = p.strings?.unauthorized ?? 'Akses tidak diizinkan.';
+      const isEn = p.language === 'en' || p.id === 'jiang_cheng';
+      const unauth = p.strings?.unauthorized ?? (isEn ? 'Access denied.' : 'Akses tidak diizinkan.');
       await ctx.reply(unauth).catch(() => {});
     }
     return;
@@ -144,13 +147,16 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
 
   const chatId = ctx.chat.id;
   const activePersona = ctx.persona ?? persona;
+  const isEn = activePersona.language === 'en' || activePersona.id === 'jiang_cheng';
 
   // Cek batas panjang pesan masuk
   const MAX_INPUT_LENGTH = Number(process.env.MAX_INPUT_LENGTH ?? 2000);
   if (isInputTooLong(rawText, MAX_INPUT_LENGTH)) {
     const tooLongMsg =
       activePersona.strings?.inputTooLong ??
-      'Pesan terlalu panjang! Maksimal 2000 karakter.';
+      (isEn
+        ? 'Message is too long. Keep it under 2000 characters.'
+        : 'Pesan terlalu panjang! Maksimal 2000 karakter.');
     await ctx.reply(tooLongMsg).catch(() => {});
     return;
   }
@@ -160,7 +166,9 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
   if (!rateStatus.allowed) {
     const rateMsg =
       activePersona.strings?.rateLimited ??
-      'Sabar! Jangan spam, tunggu sebentar sebelum memanggil lagi.';
+      (isEn
+        ? 'Slow down. Wait a moment before speaking again.'
+        : 'Sabar! Jangan spam, tunggu sebentar sebelum memanggil lagi.');
     await ctx.reply(rateMsg).catch(() => {});
     return;
   }
@@ -208,7 +216,9 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
             ) {
               const unsupportedMsg =
                 activePersona.strings?.visionUnsupported ??
-                'Aku tidak bisa melihat atau memproses gambar ini.';
+                (isEn
+                  ? 'I cannot process or view this image.'
+                  : 'Aku tidak bisa melihat atau memproses gambar ini.');
               await ctx.reply(unsupportedMsg).catch(() => {});
               return;
             }
@@ -224,7 +234,7 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
         }
 
         if (!raw) {
-          await ctx.reply('...Hmph. Aku nggak mau jawab itu.');
+          await ctx.reply(isEn ? '...I have no answer for that.' : '...Hmph. Aku nggak mau jawab itu.');
           return;
         }
 
@@ -329,9 +339,12 @@ async function handleUserChatMessage(ctx, rawText, isPrivate, replyOptions = {},
     });
   } catch (err) {
     if (err.message === 'QUEUE_FULL') {
+      const isEn = activePersona.language === 'en' || activePersona.id === 'jiang_cheng';
       const qMsg =
         activePersona.strings?.queueFull ??
-        'Antrian chat penuh! Tunggu balasan sebelumnya selesai.';
+        (isEn
+          ? 'Chat queue is full. Wait until the previous message is handled.'
+          : 'Antrian chat penuh! Tunggu balasan sebelumnya selesai.');
       await ctx.reply(qMsg).catch(() => {});
       return;
     }

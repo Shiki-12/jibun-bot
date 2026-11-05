@@ -15,12 +15,12 @@ let isRunning = false;
 /**
  * Buat inline keyboard untuk pesan pengingat yang tiba.
  */
-export function buildReminderKeyboard(reminderId) {
+export function buildReminderKeyboard(reminderId, isEn = false) {
   return new InlineKeyboard()
-    .text('Tunda 10m', `rem:snz10:${reminderId}`)
-    .text('Tunda 1j', `rem:snz60:${reminderId}`)
+    .text(isEn ? 'Snooze 10m' : 'Tunda 10m', `rem:snz10:${reminderId}`)
+    .text(isEn ? 'Snooze 1h' : 'Tunda 1j', `rem:snz60:${reminderId}`)
     .row()
-    .text('Selesai', `rem:done:${reminderId}`);
+    .text(isEn ? 'Done' : 'Selesai', `rem:done:${reminderId}`);
 }
 
 /**
@@ -66,6 +66,7 @@ export async function processPendingReminders(bot, now = Date.now()) {
       reminder.repeat?.startsWith('pomodoro:');
     let text;
     let keyboard;
+    let isEn = false;
 
     if (isSpecial) {
       text = reminder.text;
@@ -73,20 +74,25 @@ export async function processPendingReminders(bot, now = Date.now()) {
     } else {
       let persona;
       try {
-        persona = getPersonality(process.env.PERSONALITY || 'tsundere');
+        const uRow = db.prepare('SELECT persona FROM users WHERE id = ?').get(reminder.user_id);
+        const cRow = db.prepare('SELECT persona FROM chats WHERE id = ?').get(reminder.chat_id);
+        const targetId = cRow?.persona || uRow?.persona || process.env.PERSONALITY || 'tsundere';
+        persona = getPersonality(targetId);
       } catch {
         persona = { strings: {} };
       }
 
+      isEn = persona?.language === 'en' || persona?.id === 'jiang_cheng';
+
       const template =
         persona.strings?.reminderFired ??
-        'Waktunya: {text}. Jangan sampai lupa!';
+        (isEn ? 'Time for: {text}. Do not ignore it.' : 'Waktunya: {text}. Jangan sampai lupa!');
       text = template.replace('{text}', reminder.text);
-      keyboard = buildReminderKeyboard(reminder.id);
+      keyboard = buildReminderKeyboard(reminder.id, isEn);
 
       // Jika pengingat dibuat di grup (chat_id < 0), sebut pembuatnya
       if (reminder.chat_id < 0) {
-        let name = 'kamu';
+        let name = isEn ? 'you' : 'kamu';
         try {
           const userRow = db
             .prepare('SELECT first_name, username FROM users WHERE id = ?')
@@ -97,14 +103,16 @@ export async function processPendingReminders(bot, now = Date.now()) {
             name = `@${userRow.username}`;
           }
         } catch {}
-        text = `*Pengingat untuk [${name}](tg://user?id=${reminder.user_id}):*\n${text}`;
+        text = isEn
+          ? `*Reminder for [${name}](tg://user?id=${reminder.user_id}):*\n${text}`
+          : `*Pengingat untuk [${name}](tg://user?id=${reminder.user_id}):*\n${text}`;
       }
     }
 
     // Keterangan jika terlewat (misal setelah bot restart)
     const lateMinutes = Math.floor((now - reminder.due_at) / 60_000);
     if (lateMinutes >= 2) {
-      text += `\n_(telat ${lateMinutes} menit)_`;
+      text += isEn ? `\n_(${lateMinutes} minutes late)_` : `\n_(telat ${lateMinutes} menit)_`;
     }
 
     // 4. Kirim pesan ke Telegram

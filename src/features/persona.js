@@ -10,6 +10,7 @@ import {
 export { isGroupAdmin };
 
 export function renderPersonaSelector(currentPersonaId = 'tsundere') {
+  const isEn = currentPersonaId === 'jiang_cheng';
   const defaultPersonas = [
     { id: 'tsundere', name: 'Raka (Tsundere)' },
     { id: 'manis', name: 'Rio (Manis)' },
@@ -21,20 +22,29 @@ export function renderPersonaSelector(currentPersonaId = 'tsundere') {
     { id: 'jiang_cheng', name: 'Jiang Cheng (Mo Dao Zu Shi)' },
   ];
 
-  const lines = [
-    '*Ganti Personality Bot*',
-    '',
-    `Personality aktif saat ini: *${currentPersonaId}*`,
-    '',
-    'Pilih karakter di bawah untuk langsung mengganti, atau buat karakter khususmu sendiri dengan:',
-    '`/persona custom <deskripsi kepribadianmu>`',
-  ];
+  const lines = isEn
+    ? [
+        '*Change Bot Personality*',
+        '',
+        `Active personality: *${currentPersonaId}*`,
+        '',
+        'Select a character below to switch, or create your own custom personality with:',
+        '`/persona custom <description>`',
+      ]
+    : [
+        '*Ganti Personality Bot*',
+        '',
+        `Personality aktif saat ini: *${currentPersonaId}*`,
+        '',
+        'Pilih karakter di bawah untuk langsung mengganti, atau buat karakter khususmu sendiri dengan:',
+        '`/persona custom <deskripsi kepribadianmu>`',
+      ];
 
   const keyboard = new InlineKeyboard();
 
   // 1. Default Personalities
   defaultPersonas.forEach((p, idx) => {
-    const activeMark = p.id === currentPersonaId ? ' [Aktif]' : '';
+    const activeMark = p.id === currentPersonaId ? (isEn ? ' [Active]' : ' [Aktif]') : '';
     keyboard.text(`${p.name}${activeMark}`, `persona:set:${p.id}`);
     if (idx % 2 === 1) keyboard.row();
   });
@@ -42,12 +52,12 @@ export function renderPersonaSelector(currentPersonaId = 'tsundere') {
   // 2. Exclusive Personalities
   keyboard.row();
   exclusivePersonas.forEach((p) => {
-    const activeMark = p.id === currentPersonaId ? ' [Aktif]' : '';
+    const activeMark = p.id === currentPersonaId ? (isEn ? ' [Active]' : ' [Aktif]') : '';
     keyboard.text(`${p.name}${activeMark}`, `persona:set:${p.id}`).row();
   });
 
   // 3. Custom Persona
-  const customActiveMark = currentPersonaId === 'custom' ? ' [Aktif]' : '';
+  const customActiveMark = currentPersonaId === 'custom' ? (isEn ? ' [Active]' : ' [Aktif]') : '';
   keyboard.text(`Custom Persona${customActiveMark}`, 'persona:set:custom');
 
   return { text: lines.join('\n'), keyboard };
@@ -128,10 +138,12 @@ export default {
           newPersona = { name: subCommand, greeting: 'Halo!' };
         }
 
-        await ctx.reply(
-          `Personality bot berhasil diubah ke *${newPersona.name}* (${subCommand})!\n\n_${newPersona.greeting}_`,
-          { parse_mode: 'Markdown' },
-        );
+        const isEn = newPersona.language === 'en' || newPersona.id === 'jiang_cheng';
+        const changeMsg = isEn
+          ? `Bot personality successfully changed to *${newPersona.name}* (${subCommand})!\n\n_${newPersona.greeting}_`
+          : `Personality bot berhasil diubah ke *${newPersona.name}* (${subCommand})!\n\n_${newPersona.greeting}_`;
+
+        await ctx.reply(changeMsg, { parse_mode: 'Markdown' });
       },
     },
   ],
@@ -165,14 +177,21 @@ export default {
           newPersona = { name: targetId, greeting: 'Halo!' };
         }
 
+        const isEn = newPersona.language === 'en' || newPersona.id === 'jiang_cheng';
+        const activeNotice = isEn ? `Active persona: ${newPersona.name}` : `Persona aktif: ${newPersona.name}`;
+
         await ctx.answerCallbackQuery({
-          text: `Persona aktif: ${newPersona.name}`,
+          text: activeNotice,
         }).catch(() => {});
 
         const { text, keyboard } = renderPersonaSelector(targetId);
+        const switchNotice = isEn
+          ? `${text}\n\n_Persona successfully changed to ${newPersona.name}!_`
+          : `${text}\n\n_Persona berhasil diubah ke ${newPersona.name}!_`;
+
         await ctx
           .editMessageText(
-            `${text}\n\n_Persona berhasil diubah ke ${newPersona.name}!_`,
+            switchNotice,
             {
               parse_mode: 'Markdown',
               reply_markup: keyboard,
